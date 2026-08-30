@@ -32,7 +32,15 @@ select = [
     "ARG", # unused arguments
     "PTH", # pathlib usage
     "RUF", # ruff-specific
+    "S",   # bandit-class security rules
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# assert is the pytest contract surface
+"tests/*" = ["S101"]
+# preflight executes fixed argument vectors of repository gates without a
+# shell and without untrusted input (scope of S603/S607)
+"tools/preflight.py" = ["S603", "S607"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
