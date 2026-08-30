@@ -6,9 +6,34 @@
 # Contact: www.anulum.li | protoscience@anulum.li
 # SCPN Z-Pinch Core — pre-commit hooks (repository-local, pinned via .venv)
 
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+        exclude: '^LICENSES/'
+      - id: trailing-whitespace
+        exclude: '^LICENSES/'
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
   - repo: local
     hooks:
+      - id: commit-trailers
+        name: seat/authorship commit-message guard
+        entry: .venv/bin/python tools/check_commit_trailers.py
+        language: system
+        stages: [commit-msg]
+      - id: preflight-pre-push
+        name: full preflight gate before push
+        entry: .venv/bin/python tools/preflight.py
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
       - id: ruff-check
         name: ruff check
         entry: .venv/bin/ruff check --force-exclude

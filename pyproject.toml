@@ -39,6 +39,7 @@ convention = "numpy"
 
 [tool.ruff.lint.isort]
 known-first-party = [
+    "check_commit_trailers",
     "manifest_io",
     "validate_reactor_domain",
     "derive_studio_descriptor",

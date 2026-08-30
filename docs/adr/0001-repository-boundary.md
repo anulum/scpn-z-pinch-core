@@ -10,7 +10,8 @@ SCPN Z-Pinch Core — ADR 0001: repository boundary
 
 # ADR 0001 — Repository boundary and ownership
 
-**Status:** accepted (2026-08-30)  
+**Status:** accepted (2026-08-30)
+
 **Deciders:** project owner; SCPN Reactor Systems Research Group standard
 
 ## Context
