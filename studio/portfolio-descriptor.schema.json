@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anulum.li/schemas/scpn/studio-portfolio-descriptor/1.1.0",
+  "title": "SCPN Studio reactor portfolio descriptor",
+  "description": "Deterministic projection of a device-owned reactor-domain manifest for SCPN-STUDIO discovery and rendering. Version 1.1.0 supersedes 1.0.0 prior to any consumer adoption. Consumers must reject unknown schema identifiers or versions and must not infer authority beyond the fields granted here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority",
+    "capabilities",
+    "configurations",
+    "confinement_family",
+    "control_adapter",
+    "device_family",
+    "evidence_maturity",
+    "lifecycle",
+    "machine_protection",
+    "non_claims",
+    "project",
+    "research_group",
+    "schema",
+    "schema_version",
+    "source",
+    "spo_registry"
+  ],
+  "properties": {
+    "schema": {"const": "scpn.studio-portfolio-descriptor.v1"},
+    "schema_version": {"const": "1.1.0"},
+    "project": {"type": "string", "minLength": 1},
+    "device_family": {"type": "string", "minLength": 1},
+    "confinement_family": {"type": "string", "minLength": 1},
+    "evidence_maturity": {
+      "enum": [
+        "architecture_only",
+        "computational_prototype",
+        "benchmark_validated",
+        "external_code_parity",
+        "experiment_correlated",
+        "control_research_ready"
+      ]
+    },
+    "research_group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coordination_identity", "display_name"],
+      "properties": {
+        "display_name": {"type": "string", "minLength": 1},
+        "coordination_identity": {"const": "SCPN-REACTOR-SYSTEMS"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest_path",
+        "manifest_schema",
+        "manifest_schema_version",
+        "manifest_sha256",
+        "repository"
+      ],
+      "properties": {
+        "manifest_path": {"const": "reactor-domain.json"},
+        "manifest_schema": {"const": "scpn.reactor-domain.v1"},
+        "manifest_schema_version": {"type": "string", "minLength": 1},
+        "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "repository": {"type": "string", "minLength": 1}
+      }
+    },
+    "spo_registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest_sha256", "version"],
+      "properties": {
+        "version": {"type": "string", "minLength": 1},
+        "digest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "configurations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_maturity", "evidence_pointer", "identifier"],
+        "properties": {
+          "identifier": {"type": "string", "minLength": 1},
+          "evidence_maturity": {
+            "enum": [
+              "computational_prototype",
+              "benchmark_validated",
+              "external_code_parity",
+              "experiment_correlated",
+              "control_research_ready"
+            ]
+          },
+          "evidence_pointer": {"type": "string", "minLength": 1},
+          "contract_version": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "control_adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "identifier"],
+      "properties": {
+        "identifier": {"type": "string", "minLength": 1},
+        "contract_version": {"type": "string", "minLength": 1}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_action_authority",
+        "control_intent_contract",
+        "spo_actionable",
+        "spo_semantic_mode"
+      ],
+      "properties": {
+        "allowed_action_authority": {"const": "none"},
+        "spo_semantic_mode": {"const": "review_only"},
+        "spo_actionable": {"const": false},
+        "control_intent_contract": {
+          "oneOf": [{"type": "null"}, {"type": "string", "minLength": 1}]
+        }
+      }
+    },
+    "machine_protection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["availability", "final_veto_owner"],
+      "properties": {
+        "final_veto_owner": {"const": "independent_machine_protection"},
+        "availability": {"enum": ["not_assessed", "declared", "verified"]}
+      }
+    },
+    "non_claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_pointer", "reason", "state"],
+      "properties": {
+        "state": {
+          "enum": ["not_federated", "candidate", "federated", "deprecated", "blocked"]
+        },
+        "reason": {"type": "string", "minLength": 1},
+        "evidence_pointer": {
+          "oneOf": [{"type": "null"}, {"type": "string", "minLength": 1}]
+        }
+      }
+    }
+  }
+}

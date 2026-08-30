@@ -56,6 +56,7 @@ REQUIRED_PATHS = (
     "reactor-domain.json",
     "requirements-dev.txt",
     "studio/portfolio-descriptor.json",
+    "studio/portfolio-descriptor.schema.json",
     "tools/preflight.py",
 )
 
@@ -141,3 +142,14 @@ def test_no_agent_state_trees_exist() -> None:
         "ARCHIVE",
     ):
         assert not (REPO / forbidden).exists(), forbidden
+
+
+def test_descriptor_matches_ratified_schema() -> None:
+    """The committed descriptor matches the ratified 1.1.0 schema shape."""
+    schema = load_json_object(REPO / "studio" / "portfolio-descriptor.schema.json")
+    descriptor = load_json_object(REPO / "studio" / "portfolio-descriptor.json")
+    assert schema["$id"].endswith("/studio-portfolio-descriptor/1.1.0")
+    assert schema["additionalProperties"] is False
+    assert sorted(schema["required"]) == sorted(descriptor)
+    assert sorted(schema["properties"]) == sorted(descriptor)
+    assert descriptor["schema_version"] == "1.1.0"

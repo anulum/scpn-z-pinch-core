@@ -33,10 +33,17 @@ def test_descriptor_projects_identity_without_authority() -> None:
     ]
     assert descriptor["capabilities"] == []
     assert descriptor["lifecycle"]["state"] == "not_federated"
+    assert descriptor["schema_version"] == "1.1.0"
+    assert descriptor["source"]["repository"] == descriptor["project"]
+    assert descriptor["lifecycle"]["evidence_pointer"] is None
     authority = descriptor["authority"]
     assert authority["allowed_action_authority"] == "none"
     assert authority["spo_actionable"] is False
-    assert authority["machine_protection_final_veto"] is True
+    assert authority["control_intent_contract"] is None
+    assert descriptor["machine_protection"] == {
+        "availability": "not_assessed",
+        "final_veto_owner": "independent_machine_protection",
+    }
     assert descriptor["source"]["manifest_sha256"] == sha256_of_file(MANIFEST)
 
 

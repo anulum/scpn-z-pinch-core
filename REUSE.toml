@@ -14,6 +14,7 @@ version = 1
 path = [
     "reactor-domain.json",
     "studio/portfolio-descriptor.json",
+    "studio/portfolio-descriptor.schema.json",
     "capability-inventory.json",
     ".zenodo.json",
     ".github/FUNDING.yml",

@@ -1,7 +1,7 @@
 {
   "authority": {
     "allowed_action_authority": "none",
-    "machine_protection_final_veto": true,
+    "control_intent_contract": null,
     "spo_actionable": false,
     "spo_semantic_mode": "review_only"
   },
@@ -18,8 +18,13 @@
   "device_family": "z_pinch",
   "evidence_maturity": "architecture_only",
   "lifecycle": {
+    "evidence_pointer": null,
     "reason": "architecture_only: no implemented capability exists to federate",
     "state": "not_federated"
+  },
+  "machine_protection": {
+    "availability": "not_assessed",
+    "final_veto_owner": "independent_machine_protection"
   },
   "non_claims": [
     "not machine-ready",
@@ -35,12 +40,13 @@
     "display_name": "SCPN Reactor Systems Research Group"
   },
   "schema": "scpn.studio-portfolio-descriptor.v1",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "source": {
     "manifest_path": "reactor-domain.json",
     "manifest_schema": "scpn.reactor-domain.v1",
     "manifest_schema_version": "1.0.0",
-    "manifest_sha256": "f60de4921d37882ee022ecbde9b47e3fe0af12c18ff078a385ce40aa2b7ec8e1"
+    "manifest_sha256": "f60de4921d37882ee022ecbde9b47e3fe0af12c18ff078a385ce40aa2b7ec8e1",
+    "repository": "SCPN-Z-PINCH-CORE"
   },
   "spo_registry": {
     "digest_sha256": "786d9542ce76c56dd7748fa948b17efed6c073525e527ce90e6d5e29a2d00090",

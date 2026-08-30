@@ -29,7 +29,7 @@ from typing import Any, Final
 from manifest_io import canonical_json_bytes, load_json_object, sha256_of_file
 
 DESCRIPTOR_SCHEMA: Final = "scpn.studio-portfolio-descriptor.v1"
-DESCRIPTOR_SCHEMA_VERSION: Final = "1.0.0"
+DESCRIPTOR_SCHEMA_VERSION: Final = "1.1.0"
 
 
 def derive_descriptor(manifest_path: Path) -> dict[str, Any]:
@@ -57,6 +57,7 @@ def derive_descriptor(manifest_path: Path) -> dict[str, Any]:
     adapter = manifest.get("control_adapter", {})
     studio = manifest.get("studio_integration", {})
     registry = manifest.get("spo_registry", {})
+    protection = manifest.get("machine_protection", {})
     return {
         "schema": DESCRIPTOR_SCHEMA,
         "schema_version": DESCRIPTOR_SCHEMA_VERSION,
@@ -65,6 +66,7 @@ def derive_descriptor(manifest_path: Path) -> dict[str, Any]:
             "manifest_schema": manifest.get("schema"),
             "manifest_schema_version": manifest.get("schema_version"),
             "manifest_sha256": sha256_of_file(manifest_path),
+            "repository": manifest.get("project"),
         },
         "project": manifest.get("project"),
         "research_group": manifest.get("research_group"),
@@ -85,12 +87,19 @@ def derive_descriptor(manifest_path: Path) -> dict[str, Any]:
             "allowed_action_authority": "none",
             "spo_semantic_mode": profile.get("mode"),
             "spo_actionable": profile.get("actionable"),
-            "machine_protection_final_veto": True,
+            "control_intent_contract": profile.get("control_intent_contract"),
+        },
+        "machine_protection": {
+            "final_veto_owner": "independent_machine_protection"
+            if protection.get("final_veto") == "independent"
+            else protection.get("final_veto"),
+            "availability": "not_assessed",
         },
         "non_claims": manifest.get("non_claims"),
         "lifecycle": {
             "state": studio.get("state"),
             "reason": studio.get("reason"),
+            "evidence_pointer": studio.get("evidence_pointer"),
         },
     }
 

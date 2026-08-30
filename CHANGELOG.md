@@ -28,3 +28,14 @@ SCPN Z-Pinch Core — CHANGELOG
 - Continuous-integration, code-scanning, security-audit, documentation,
   SBOM, pre-commit, and Scorecard workflow definitions (read-only
   permissions; no publication or deployment workflows).
+
+### Changed
+
+- Studio portfolio descriptor schema ratified at version 1.1.0 after
+  downstream review, before any consumer adoption (1.0.0 superseded
+  unconsumed): canonical JSON Schema published in-repository with a strict
+  unknown-field policy, explicit source repository, nullable lifecycle
+  evidence pointer, nullable versioned control-intent reference, ratified
+  capability item shape, and a machine-protection object (independent
+  final-veto owner with availability `not_assessed`) replacing the former
+  boolean flag.
