@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Commercial license available
+# © Concepts 1996–2026 Miroslav Šotek. All rights reserved.
+# © Code 2020–2026 Miroslav Šotek. All rights reserved.
+# ORCID: 0009-0009-3560-0851
+# Contact: www.anulum.li | protoscience@anulum.li
+# SCPN Z-Pinch Core — pre-commit hooks (repository-local, pinned via .venv)
+
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: .venv/bin/ruff check --force-exclude
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format check
+        entry: .venv/bin/ruff format --check --force-exclude
+        language: system
+        types: [python]
+      - id: mypy-strict
+        name: mypy strict
+        entry: .venv/bin/mypy --strict tools tests
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: reactor-domain-validate
+        name: reactor domain manifest validation
+        entry: .venv/bin/python tools/validate_reactor_domain.py reactor-domain.json
+        language: system
+        pass_filenames: false
+        files: ^(reactor-domain\.json|tools/validate_reactor_domain\.py)$
+      - id: studio-descriptor-drift
+        name: studio descriptor drift check
+        entry: .venv/bin/python tools/derive_studio_descriptor.py --check
+        language: system
+        pass_filenames: false
+        files: ^(reactor-domain\.json|studio/portfolio-descriptor\.json|tools/derive_studio_descriptor\.py)$
+      - id: capability-inventory-drift
+        name: capability inventory drift check
+        entry: .venv/bin/python tools/generate_capability_inventory.py --check
+        language: system
+        pass_filenames: false
+        files: ^(reactor-domain\.json|capability-inventory\.json|tools/generate_capability_inventory\.py)$

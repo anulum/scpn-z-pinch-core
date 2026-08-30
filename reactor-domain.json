@@ -1,0 +1,104 @@
+{
+  "schema": "scpn.reactor-domain.v1",
+  "schema_version": "1.0.0",
+  "project": "SCPN-Z-PINCH-CORE",
+  "research_group": {
+    "display_name": "SCPN Reactor Systems Research Group",
+    "coordination_identity": "SCPN-REACTOR-SYSTEMS"
+  },
+  "device_family": "z_pinch",
+  "confinement_family": "self_magnetic",
+  "evidence_maturity": "architecture_only",
+  "license": "AGPL-3.0-or-later",
+  "spo_registry": {
+    "version": "1.0.0",
+    "digest_sha256": "786d9542ce76c56dd7748fa948b17efed6c073525e527ce90e6d5e29a2d00090",
+    "source_path": "03_CODE/SCPN-PHASE-ORCHESTRATOR/src/scpn_phase_orchestrator/reactor_semantics/registry.py"
+  },
+  "configurations": [
+    "sheared_flow_z_pinch",
+    "z_pinch"
+  ],
+  "owned_domains": [
+    "z_pinch_configuration_policy",
+    "shot_lifecycle_definition",
+    "diagnostic_semantics_and_reference_frames",
+    "clock_identity_declarations",
+    "actuator_response_model_boundaries",
+    "safety_envelope_declaration",
+    "control_adapter_specification"
+  ],
+  "excluded_domains": [
+    {
+      "domain": "solver_mathematics_and_validation_evidence",
+      "owner": "SCPN-FUSION-CORE"
+    },
+    {
+      "domain": "typed_signal_semantics_and_comparability",
+      "owner": "SCPN-PHASE-ORCHESTRATOR"
+    },
+    {
+      "domain": "control_admission_and_action_formation",
+      "owner": "SCPN-CONTROL"
+    },
+    {
+      "domain": "machine_protection_final_veto",
+      "owner": "independent_machine_protection"
+    },
+    {
+      "domain": "portfolio_presentation_identity_entitlement_execution_gating",
+      "owner": "SCPN-STUDIO"
+    },
+    {
+      "domain": "theta_pinch_devices",
+      "owner": "SCPN-THETA-PINCH-CORE"
+    },
+    {
+      "domain": "dense_plasma_focus_devices",
+      "owner": "SCPN-DENSE-PLASMA-FOCUS-CORE"
+    },
+    {
+      "domain": "magnetised_liner_inertial_fusion",
+      "owner": "SCPN-MIF-MAGLIF-CORE"
+    },
+    {
+      "domain": "reversed_field_pinch_devices",
+      "owner": "SCPN-RFP-CORE"
+    }
+  ],
+  "fusion_solver_seams": {
+    "active": [],
+    "policy": "Versioned seams from SCPN-FUSION-CORE may be consumed only after the reactor family migration gate proves exact replacement; no solver code is copied into this repository."
+  },
+  "spo_semantic_profile": {
+    "mode": "review_only",
+    "actionable": false,
+    "control_intent_contract": null
+  },
+  "control_adapter": {
+    "identifier": "scpn-z-pinch-core.control-adapter",
+    "contract_version": "0.1.0-spec",
+    "specification": "docs/CONTROL_ADAPTER_SPECIFICATION.md",
+    "implementation": null,
+    "direct_actuation": false
+  },
+  "machine_protection": {
+    "final_veto": "independent",
+    "statement": "Independent machine-protection systems retain the final veto before any plant actuator path; nothing in this repository participates in, or substitutes for, that path."
+  },
+  "studio_integration": {
+    "state": "not_federated",
+    "reason": "architecture_only: no implemented capability exists to federate",
+    "descriptor": "studio/portfolio-descriptor.json"
+  },
+  "capabilities": [],
+  "claims": [],
+  "non_claims": [
+    "not machine-ready",
+    "not safety-certified",
+    "not autonomous-plant-ready",
+    "not commercially reactor-ready",
+    "no implemented solver, controller, benchmark, dataset, or deployable artefact",
+    "no experimental correlation"
+  ]
+}

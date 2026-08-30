@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Commercial license available
+# © Concepts 1996–2026 Miroslav Šotek. All rights reserved.
+# © Code 2020–2026 Miroslav Šotek. All rights reserved.
+# ORCID: 0009-0009-3560-0851
+# Contact: www.anulum.li | protoscience@anulum.li
+# SCPN Z-Pinch Core — citation metadata
+cff-version: 1.2.0
+message: >-
+  If you reference this repository, cite it as below. No release, version,
+  or DOI exists yet; cite the repository state you inspected.
+type: software
+title: SCPN Z-Pinch Core
+abstract: >-
+  Governed device-family repository for the classical and sheared-flow
+  Z-pinch configurations within the SCPN Reactor Systems Research Group.
+  Currently architecture-only: boundary contracts, CONTROL adapter
+  specification, and validation tooling, with no implemented reactor
+  capability.
+authors:
+  - family-names: Šotek
+    given-names: Miroslav
+    orcid: https://orcid.org/0009-0009-3560-0851
+    affiliation: ANULUM, Marbach SG, Switzerland
+license: AGPL-3.0-or-later
+contact:
+  - email: protoscience@anulum.li
+    family-names: Šotek
+    given-names: Miroslav
+keywords:
+  - Z-pinch
+  - sheared-flow stabilisation
+  - pulsed power
+  - fusion energy
+  - plasma physics
+  - control systems architecture

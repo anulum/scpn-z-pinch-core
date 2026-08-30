@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Commercial license available
+# © Concepts 1996–2026 Miroslav Šotek. All rights reserved.
+# © Code 2020–2026 Miroslav Šotek. All rights reserved.
+# ORCID: 0009-0009-3560-0851
+# Contact: www.anulum.li | protoscience@anulum.li
+# SCPN Z-Pinch Core — feature request form
+
+name: Feature request
+description: A proposal within the Z-pinch device-family boundary
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Proposals must respect the project boundary: Z-pinch device truth
+        only. Solver mathematics belongs to the fusion solver laboratory,
+        control admission to the control plane, presentation to the studio
+        layer. See README "Explicit exclusions".
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What need does this address, and for whom?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed direction
+      description: >-
+        Sketch of the surface you propose, its evidence-maturity target, and
+        the validation it would need.
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Boundary statement
+      description: >-
+        Why this belongs in this repository rather than a neighbouring
+        project.
+    validations:
+      required: true

@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Commercial license available
+# © Concepts 1996–2026 Miroslav Šotek. All rights reserved.
+# © Code 2020–2026 Miroslav Šotek. All rights reserved.
+# ORCID: 0009-0009-3560-0851
+# Contact: www.anulum.li | protoscience@anulum.li
+# SCPN Z-Pinch Core — pinned development and validation toolchain
+#
+# Development-only lock for the validation tooling. This is not a runtime
+# dependency manifest: the repository declares zero runtime dependencies at
+# architecture-only maturity.
+pre-commit==4.6.2
+ruff==0.15.9
+mypy==1.20.2
+pytest==9.0.3
+pytest-cov==7.1.0
+coverage==7.13.5
+reuse==6.2.0

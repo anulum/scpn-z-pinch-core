@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Commercial license available
+# © Concepts 1996–2026 Miroslav Šotek. All rights reserved.
+# © Code 2020–2026 Miroslav Šotek. All rights reserved.
+# ORCID: 0009-0009-3560-0851
+# Contact: www.anulum.li | protoscience@anulum.li
+# SCPN Z-Pinch Core — bug report form
+
+name: Bug report
+description: A reproducible defect in the validation tooling or metadata
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        The repository is architecture-only: it implements validation tooling
+        and boundary contracts, not reactor capability. Vulnerabilities go to
+        the private route in SECURITY.md, never here.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Observed behaviour, including the exact command and output.
+      placeholder: python3 tools/validate_reactor_domain.py reactor-domain.json …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Exact steps from a clean checkout.
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+      description: Output of `git rev-parse HEAD`.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS and Python version (`python3 --version`).
+    validations:
+      required: true

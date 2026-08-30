@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Commercial license available
+# © Concepts 1996–2026 Miroslav Šotek. All rights reserved.
+# © Code 2020–2026 Miroslav Šotek. All rights reserved.
+# ORCID: 0009-0009-3560-0851
+# Contact: www.anulum.li | protoscience@anulum.li
+# SCPN Z-Pinch Core — REUSE 3.x licensing metadata
+
+version = 1
+
+# JSON cannot carry comments, so machine-readable artefacts are annotated
+# here instead of in-file.
+[[annotations]]
+path = [
+    "reactor-domain.json",
+    "studio/portfolio-descriptor.json",
+    "capability-inventory.json",
+    ".zenodo.json",
+    ".github/FUNDING.yml",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = [
+    "Concepts 1996-2026 Miroslav Šotek. All rights reserved.",
+    "Code 2020-2026 Miroslav Šotek. All rights reserved.",
+]
+SPDX-License-Identifier = "AGPL-3.0-or-later"

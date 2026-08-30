@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Commercial license available
+# © Concepts 1996–2026 Miroslav Šotek. All rights reserved.
+# © Code 2020–2026 Miroslav Šotek. All rights reserved.
+# ORCID: 0009-0009-3560-0851
+# Contact: www.anulum.li | protoscience@anulum.li
+# SCPN Z-Pinch Core — code ownership
+
+# Default: every change requires owner review
+* @anulum
+
+# Contract surfaces: boundary, safety, and ecosystem contracts
+reactor-domain.json @anulum
+studio/ @anulum
+docs/CONTROL_ADAPTER_SPECIFICATION.md @anulum
+docs/THREAT_MODEL.md @anulum
+docs/adr/ @anulum
+
+# Validation tooling and workflow definitions
+tools/ @anulum
+.github/ @anulum

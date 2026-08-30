@@ -1,0 +1,22 @@
+{
+  "title": "SCPN Z-Pinch Core",
+  "description": "Governed device-family repository for the classical and sheared-flow Z-pinch configurations within the SCPN Reactor Systems Research Group. Currently architecture-only: boundary contracts, CONTROL adapter specification, and validation tooling, with no implemented reactor capability.",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "AGPL-3.0-or-later",
+  "creators": [
+    {
+      "name": "Šotek, Miroslav",
+      "affiliation": "ANULUM, Marbach SG, Switzerland",
+      "orcid": "0009-0009-3560-0851"
+    }
+  ],
+  "keywords": [
+    "Z-pinch",
+    "sheared-flow stabilisation",
+    "pulsed power",
+    "fusion energy",
+    "plasma physics",
+    "control systems architecture"
+  ]
+}
