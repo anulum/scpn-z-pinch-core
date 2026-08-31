@@ -12,7 +12,8 @@ The gate plan mirrors ``VALIDATION.md``: lint, formatting, strict typing,
 tests with complete statement and branch coverage, the reactor-domain
 validator (with the portfolio map cross-check when the canonical map is
 present), descriptor and inventory drift checks, REUSE licensing lint,
-workflow lint, and documentation link validation. A gate whose tool is
+workflow lint, the workflow modularity guard, and documentation
+link validation. A gate whose tool is
 missing fails — a missing gate is never a pass. ``--only NAME`` runs a
 single gate, which the ``make docs`` target uses for the documentation
 check.
@@ -200,6 +201,7 @@ def build_gate_plan(root: Path) -> list[tuple[str, list[str] | None]]:
         ),
         ("reuse", [str(bin_dir / "reuse"), "lint"]),
         ("actionlint", ["actionlint"]),
+        ("workflows", [python, "tools/audit_workflows.py"]),
         ("docs", None),
     ]
 

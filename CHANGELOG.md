@@ -14,6 +14,17 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Added
 
+- Modular hosted-workflow surface per the ecosystem workflow-modularity
+  standard: `ci.yml` reduced to a coordinator with a stable fail-closed
+  `gate` job, single-responsibility reusable workflows for static
+  analysis/repository policy and for tests, a versioned machine-readable
+  inventory (`.github/workflow-inventory.json`,
+  `scpn.workflow-inventory.v1` `1.0.0`), and a fail-closed modularity
+  guard (`tools/audit_workflows.py`) enforced locally (preflight gate,
+  pre-commit hook) and in hosted CI. The duplicate documentation-links
+  step was removed from the CI chain; `docs.yml` remains the single
+  owner of documentation validation.
+
 - Typed reference frames, clock synchronisation relations (synthetic
   bounds only; no correlation evidence claimed), and per-channel
   acquisition windows and element counts in the diagnostic model;

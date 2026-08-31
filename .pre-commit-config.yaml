@@ -28,6 +28,12 @@ repos:
         entry: .venv/bin/python tools/check_commit_trailers.py
         language: system
         stages: [commit-msg]
+      - id: workflow-modularity
+        name: workflow modularity guard
+        entry: .venv/bin/python tools/audit_workflows.py
+        language: system
+        pass_filenames: false
+        files: ^\.github/(workflows/.*\.yml|workflow-inventory\.json)$
       - id: preflight-pre-push
         name: full preflight gate before push
         entry: .venv/bin/python tools/preflight.py

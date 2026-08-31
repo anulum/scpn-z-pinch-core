@@ -4,7 +4,7 @@
 # © Code 2020–2026 Miroslav Šotek. All rights reserved.
 # ORCID: 0009-0009-3560-0851
 # Contact: www.anulum.li | protoscience@anulum.li
-# SCPN Z-Pinch Core — correctness gate
+# SCPN Z-Pinch Core — coordinator and stable required gate
 
 name: CI
 
@@ -20,32 +20,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gates:
-    name: Lint, typing, tests, domain checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+  static-policy:
+    name: Static analysis and policy
+    uses: ./.github/workflows/reusable-static-policy.yml
     permissions:
       contents: read
+  tests:
+    name: Tests
+    uses: ./.github/workflows/reusable-tests.yml
+    permissions:
+      contents: read
+  gate:
+    name: Required gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [static-policy, tests]
+    if: always()
+    permissions: {}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12.14"
-      - name: Install pinned toolchain
-        run: python -m pip install -r requirements-dev.txt
-      - name: Ruff lint
-        run: ruff check .
-      - name: Ruff format
-        run: ruff format --check .
-      - name: Mypy strict
-        run: mypy --strict src tools tests
-      - name: Tests with complete coverage
-        run: pytest -q --cov=src --cov=tools --cov-branch --cov-fail-under=100
-      - name: Reactor domain manifest
-        run: python tools/validate_reactor_domain.py reactor-domain.json
-      - name: Studio descriptor drift
-        run: python tools/derive_studio_descriptor.py --check
-      - name: Capability inventory drift
-        run: python tools/generate_capability_inventory.py --check
-      - name: Documentation links
-        run: python tools/preflight.py --only docs
+      - name: Fail closed on any category result
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            echo "category result: $result"
+            if [ "$result" != "success" ]; then
+              echo "gate: category did not succeed; failing closed"
+              exit 1
+            fi
+          done
