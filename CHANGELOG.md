@@ -14,6 +14,14 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Added
 
+- Typed reference frames, clock synchronisation relations (synthetic
+  bounds only; no correlation evidence claimed), and per-channel
+  acquisition windows and element counts in the diagnostic model;
+  hardened decoders (recursive exact-key, duplicate-member, and
+  byte-canonical refusal in both codecs); envelope `1.1.0` adding
+  `manifest_sha256` over the committed canonical `reactor-domain.json`
+  (fixture regenerated; byte hash re-pinned in tests).
+
 - Portable diagnostic-plan envelope
   (`src/scpn_z_pinch_core/plan_envelope.py`,
   `scpn.reactor-diagnostic-plan-envelope.v1` version `1.0.0`): a

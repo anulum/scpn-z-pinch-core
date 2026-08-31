@@ -38,7 +38,7 @@ from scpn_z_pinch_core.observability import (
 )
 
 ENVELOPE_SCHEMA: Final = "scpn.reactor-diagnostic-plan-envelope.v1"
-ENVELOPE_SCHEMA_VERSION: Final = "1.0.0"
+ENVELOPE_SCHEMA_VERSION: Final = "1.1.0"
 PROJECT: Final = "SCPN-Z-PINCH-CORE"
 CAPABILITY: Final = "diagnostic_clock_semantics"
 EVIDENCE_MATURITY: Final = "computational_prototype"
@@ -83,6 +83,9 @@ class PlanEnvelope:
         Identifier of the enveloped plan.
     plan_sha256
         SHA-256 of the inner plan's canonical bytes as lowercase hex.
+    manifest_sha256
+        SHA-256 of the repository's committed canonical
+        ``reactor-domain.json`` as lowercase hex.
     producer_revision
         Producer package revision that emitted the envelope; non-empty.
     non_claims
@@ -106,6 +109,7 @@ class PlanEnvelope:
     binding: ObservabilityBinding
     plan_identifier: str
     plan_sha256: str
+    manifest_sha256: str
     producer_revision: str
     non_claims: tuple[str, ...]
 
@@ -171,6 +175,11 @@ class PlanEnvelope:
                 "envelope.plan_sha256: must be 64 lowercase hexadecimal "
                 f"characters, got {self.plan_sha256!r}"
             )
+        if _HEX_DIGEST.fullmatch(self.manifest_sha256) is None:
+            raise DiagnosticPlanError(
+                "envelope.manifest_sha256: must be 64 lowercase hexadecimal "
+                f"characters, got {self.manifest_sha256!r}"
+            )
         if not self.producer_revision:
             raise DiagnosticPlanError("envelope.producer_revision: must be non-empty")
         if self.non_claims != NON_CLAIMS:
@@ -207,6 +216,7 @@ class PlanEnvelope:
             },
             "plan_identifier": self.plan_identifier,
             "plan_sha256": self.plan_sha256,
+            "manifest_sha256": self.manifest_sha256,
             "producer_revision": self.producer_revision,
             "non_claims": list(self.non_claims),
         }
@@ -239,7 +249,9 @@ class PlanEnvelope:
         return hashlib.sha256(self.canonical_bytes()).hexdigest()
 
 
-def envelope_for_plan(plan: DiagnosticPlan, producer_revision: str) -> PlanEnvelope:
+def envelope_for_plan(
+    plan: DiagnosticPlan, producer_revision: str, manifest_sha256: str
+) -> PlanEnvelope:
     """Build the envelope for one validated diagnostic plan.
 
     Parameters
@@ -248,6 +260,8 @@ def envelope_for_plan(plan: DiagnosticPlan, producer_revision: str) -> PlanEnvel
         Validated plan to envelope.
     producer_revision
         Producer package revision emitting the envelope; non-empty.
+    manifest_sha256
+        SHA-256 of the committed canonical ``reactor-domain.json``.
 
     Returns
     -------
@@ -272,6 +286,7 @@ def envelope_for_plan(plan: DiagnosticPlan, producer_revision: str) -> PlanEnvel
         binding=CATALOGUE_BINDING,
         plan_identifier=plan.identifier,
         plan_sha256=plan.digest_sha256(),
+        manifest_sha256=manifest_sha256,
         producer_revision=producer_revision,
         non_claims=NON_CLAIMS,
     )
@@ -423,6 +438,7 @@ def envelope_from_record(record: Any) -> PlanEnvelope:
         "binding",
         "plan_identifier",
         "plan_sha256",
+        "manifest_sha256",
         "producer_revision",
         "non_claims",
     }
@@ -432,6 +448,17 @@ def envelope_from_record(record: Any) -> PlanEnvelope:
     binding = record.get("binding")
     if not isinstance(binding, dict):
         raise DiagnosticPlanError("binding: must be an object")
+    unknown_binding = sorted(
+        set(binding)
+        - {
+            "catalogue_version",
+            "catalogue_digest_sha256",
+            "reactor_registry_version",
+            "reactor_registry_digest_sha256",
+        }
+    )
+    if unknown_binding:
+        raise DiagnosticPlanError(f"binding: unknown members {unknown_binding!r}")
     return PlanEnvelope(
         schema=_string(record, "schema"),
         schema_version=_string(record, "schema_version"),
@@ -452,6 +479,7 @@ def envelope_from_record(record: Any) -> PlanEnvelope:
         ),
         plan_identifier=_string(record, "plan_identifier"),
         plan_sha256=_string(record, "plan_sha256"),
+        manifest_sha256=_string(record, "manifest_sha256"),
         producer_revision=_string(record, "producer_revision"),
         non_claims=_string_tuple(record, "non_claims"),
     )
@@ -489,8 +517,8 @@ def envelope_from_bytes(data: bytes) -> PlanEnvelope:
     Parameters
     ----------
     data
-        UTF-8 JSON document; NaN and infinity literals and duplicate
-        members are rejected.
+        UTF-8 JSON document; NaN and infinity literals, duplicate
+        members, and non-canonical byte forms are rejected.
 
     Returns
     -------
@@ -517,4 +545,7 @@ def envelope_from_bytes(data: bytes) -> PlanEnvelope:
         )
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise DiagnosticPlanError(f"record: invalid JSON document: {exc}") from exc
-    return envelope_from_record(record)
+    envelope = envelope_from_record(record)
+    if envelope.canonical_bytes() != data:
+        raise DiagnosticPlanError("record: non-canonical document is rejected")
+    return envelope

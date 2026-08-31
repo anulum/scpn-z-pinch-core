@@ -42,7 +42,7 @@ from scpn_z_pinch_core.plan_envelope import (
 )
 
 FIXTURE = Path(__file__).parent / "data" / "plan_envelope_fixture.json"
-FIXTURE_SHA256 = "d857bf142da1eff5fc98a6ae419721441a7d9d2b310c1254535b848438d92165"
+FIXTURE_SHA256 = "69a068ded2d3db9b9c64080547cedd204893637996b9fab91638ba3491b940a0"
 
 
 def fixture_document() -> dict[str, Any]:
@@ -73,7 +73,10 @@ def test_builder_matches_fixture_envelope() -> None:
     document = fixture_document()
     plan = plan_from_record(document["plan"])
     envelope = envelope_from_record(document["envelope"])
-    assert envelope_for_plan(plan, envelope.producer_revision) == envelope
+    assert (
+        envelope_for_plan(plan, envelope.producer_revision, envelope.manifest_sha256)
+        == envelope
+    )
 
 
 def test_round_trip_preserves_digest() -> None:
@@ -120,7 +123,7 @@ def test_builder_rejects_empty_revision() -> None:
     document = fixture_document()
     plan = plan_from_record(document["plan"])
     with pytest.raises(DiagnosticPlanError, match="producer_revision"):
-        envelope_for_plan(plan, "")
+        envelope_for_plan(plan, "", "0" * 64)
 
 
 @pytest.mark.parametrize(
@@ -128,6 +131,7 @@ def test_builder_rejects_empty_revision() -> None:
     [
         ("schema", "scpn.other.v1", r"envelope\.schema"),
         ("schema_version", "9.9.9", "schema_version"),
+        ("schema_version", "1.0.0", "schema_version"),
         ("project", "SCPN-OTHER-CORE", r"envelope\.project"),
         ("configurations", ("conventional_tokamak",), "owned set"),
         ("capability", "device_configuration_model", r"envelope\.capability"),
@@ -137,6 +141,7 @@ def test_builder_rejects_empty_revision() -> None:
         ("actionable", True, "never actionable"),
         ("plan_identifier", "Bad-Id", "plan_identifier"),
         ("plan_sha256", "XYZ", "plan_sha256"),
+        ("manifest_sha256", "XYZ", "manifest_sha256"),
         ("producer_revision", "", "producer_revision"),
         ("non_claims", ("no control action is proposed or authorised",), "non_claims"),
     ],
@@ -249,9 +254,32 @@ def test_bytes_parser_rejects_invalid_utf8() -> None:
 def test_constants_are_the_published_contract() -> None:
     """The public constants state the exchanged contract exactly."""
     assert ENVELOPE_SCHEMA == "scpn.reactor-diagnostic-plan-envelope.v1"
-    assert ENVELOPE_SCHEMA_VERSION == "1.0.0"
+    assert ENVELOPE_SCHEMA_VERSION == "1.1.0"
     assert PROJECT == "SCPN-Z-PINCH-CORE"
     assert NON_CLAIMS == (
         "no control action is proposed or authorised",
         "no physical observation is described or claimed",
     )
+
+
+def test_manifest_digest_matches_committed_manifest() -> None:
+    """The envelope pins the committed canonical manifest bytes."""
+    manifest = Path(__file__).parents[1] / "reactor-domain.json"
+    digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
+    assert fixture_envelope().manifest_sha256 == digest
+
+
+def test_parser_rejects_unknown_binding_members() -> None:
+    """Unknown members inside the binding are rejected."""
+    record = fixture_envelope().to_record()
+    record["binding"]["surprise"] = 1
+    with pytest.raises(DiagnosticPlanError, match="unknown members"):
+        envelope_from_record(record)
+
+
+def test_bytes_parser_rejects_non_canonical_document() -> None:
+    """A valid but non-canonical byte form is rejected."""
+    record = fixture_envelope().to_record()
+    pretty = (json.dumps(record, indent=2, sort_keys=True) + "\n").encode()
+    with pytest.raises(DiagnosticPlanError, match="non-canonical"):
+        envelope_from_bytes(pretty)

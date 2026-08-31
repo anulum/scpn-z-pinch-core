@@ -50,6 +50,22 @@ REACTOR_REGISTRY_DIGEST: Final = (
 INSTABILITY_BAND_HZ: Final = (1.0e05, 1.0e08)
 DRIVE_TIMING_CEILING_S: Final = 1.0e-08
 
+SHOT_DURATION_CEILING_S: Final = 1.0e-03
+ELEMENT_COUNT_BAND: Final = (4, 256)
+
+
+class FrameKind(StrEnum):
+    """Reference-frame kind a declared frame may take."""
+
+    MACHINE_CARTESIAN = "machine_cartesian"
+    MACHINE_CYLINDRICAL = "machine_cylindrical"
+    FLUX_SURFACE = "flux_surface"
+    BOOZER = "boozer"
+    FIELD_LINE = "field_line"
+    CHAMBER_CARTESIAN = "chamber_cartesian"
+    BEAMLINE = "beamline"
+    BLANKET_ZONE = "blanket_zone"
+
 
 class ObservabilityClass(StrEnum):
     """Epistemic route mirrored from the SPO catalogue (reachable subset)."""
@@ -77,6 +93,12 @@ class ClockKind(StrEnum):
     SHOT_EVENT_EPOCH = "shot_event_epoch"
     SIMULATION = "simulation"
 
+
+ALLOWED_FRAME_KINDS: Final = frozenset(
+    {
+        FrameKind.MACHINE_CYLINDRICAL,
+    }
+)
 
 _ADMISSIBLE_CARRIERS: Final[dict[ObservabilityClass, frozenset[SemanticCarrier]]] = {
     ObservabilityClass.DERIVED_CYCLIC: frozenset(
@@ -301,6 +323,130 @@ _CANDIDATE_INDEX: Final = {
 
 
 @dataclass(frozen=True, slots=True)
+class ReferenceFrame:
+    """One declared reference-frame identity.
+
+    Parameters
+    ----------
+    identifier
+        Plan-local frame identifier.
+    kind
+        Frame kind; must be allowed for this repository.
+    description
+        Statement of the frame convention; non-empty.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If any component violates the model.
+    """
+
+    identifier: str
+    kind: FrameKind
+    description: str
+
+    def __post_init__(self) -> None:
+        """Validate the frame declaration.
+
+        Raises
+        ------
+        DiagnosticPlanError
+            If any component violates the model.
+        """
+        if IDENTIFIER.fullmatch(self.identifier) is None:
+            raise DiagnosticPlanError(
+                f"frame.identifier: malformed identifier {self.identifier!r}"
+            )
+        if self.kind not in ALLOWED_FRAME_KINDS:
+            raise DiagnosticPlanError(
+                f"frame.kind: {self.kind.value!r} is not an allowed frame "
+                "kind for this repository"
+            )
+        if not self.description:
+            raise DiagnosticPlanError("frame.description: must be non-empty")
+
+
+@dataclass(frozen=True, slots=True)
+class ClockRelation:
+    """One declared synchronisation bound between two declared clocks.
+
+    A relation declares synthetic offset and uncertainty BOUNDS between
+    two clock identities; it claims no correlation evidence, and no
+    clock is thereby mapped to physical wall time.
+
+    Parameters
+    ----------
+    child_identifier
+        Clock whose epoch is being bounded.
+    parent_identifier
+        Clock the bound is stated against.
+    max_offset_s
+        Declared worst-case offset magnitude; finite and non-negative.
+    uncertainty_s
+        Declared uncertainty of the bound; finite and non-negative.
+    method
+        Statement of HOW the bound would be established; non-empty.
+    mapping_state
+        Must be ``"unmapped"``: no clock is mapped to wall time.
+    evidence_claimed
+        Must be ``False``: no correlation evidence exists or is claimed.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If any component violates the model.
+    """
+
+    child_identifier: str
+    parent_identifier: str
+    max_offset_s: float
+    uncertainty_s: float
+    method: str
+    mapping_state: str
+    evidence_claimed: bool
+
+    def __post_init__(self) -> None:
+        """Validate the relation declaration.
+
+        Raises
+        ------
+        DiagnosticPlanError
+            If any component violates the model.
+        """
+        for field, value in (
+            ("child_identifier", self.child_identifier),
+            ("parent_identifier", self.parent_identifier),
+        ):
+            if IDENTIFIER.fullmatch(value) is None:
+                raise DiagnosticPlanError(
+                    f"relation.{field}: malformed identifier {value!r}"
+                )
+        if self.child_identifier == self.parent_identifier:
+            raise DiagnosticPlanError("relation: a clock cannot be related to itself")
+        for bound_field, bound_value in (
+            ("max_offset_s", self.max_offset_s),
+            ("uncertainty_s", self.uncertainty_s),
+        ):
+            if not math.isfinite(bound_value) or bound_value < 0.0:
+                raise DiagnosticPlanError(
+                    f"relation.{bound_field}: must be finite and "
+                    f"non-negative, got {bound_value!r}"
+                )
+        if not self.method:
+            raise DiagnosticPlanError("relation.method: must be non-empty")
+        if self.mapping_state != "unmapped":
+            raise DiagnosticPlanError(
+                "relation.mapping_state: must be 'unmapped'; no clock is "
+                f"mapped to wall time, got {self.mapping_state!r}"
+            )
+        if self.evidence_claimed is not False:
+            raise DiagnosticPlanError(
+                "relation.evidence_claimed: must be False; no correlation "
+                "evidence exists or is claimed"
+            )
+
+
+@dataclass(frozen=True, slots=True)
 class ClockModel:
     """One declared clock identity.
 
@@ -380,6 +526,13 @@ class DiagnosticChannelPlan:
     timing_uncertainty_s
         Event-timing uncertainty; required positive for event-relative
         channels and forbidden otherwise.
+    acquisition_start_s
+        Acquisition window start relative to the bound clock's epoch;
+        finite (negative means pre-trigger).
+    acquisition_duration_s
+        Acquisition window length; finite and positive.
+    element_count
+        Number of declared sensing elements; integer, at least one.
     evidence_bindings
         Statement per evidence slot of HOW the slot would be bound; keys
         must exactly equal the candidate's class-fixed vocabulary.
@@ -400,6 +553,9 @@ class DiagnosticChannelPlan:
     sample_rate_hz: float
     max_signal_frequency_hz: float
     timing_uncertainty_s: float | None
+    acquisition_start_s: float
+    acquisition_duration_s: float
+    element_count: int
     evidence_bindings: dict[str, str]
     synthetic: bool
 
@@ -471,6 +627,29 @@ class DiagnosticChannelPlan:
             raise DiagnosticPlanError(
                 "channel.timing_uncertainty_s: only event-relative channels "
                 "declare a timing uncertainty"
+            )
+        if not math.isfinite(self.acquisition_start_s):
+            raise DiagnosticPlanError(
+                "channel.acquisition_start_s: must be finite, "
+                f"got {self.acquisition_start_s!r}"
+            )
+        if (
+            not math.isfinite(self.acquisition_duration_s)
+            or self.acquisition_duration_s <= 0.0
+        ):
+            raise DiagnosticPlanError(
+                "channel.acquisition_duration_s: must be finite and "
+                f"positive, got {self.acquisition_duration_s!r}"
+            )
+        if isinstance(self.element_count, bool) or not isinstance(
+            self.element_count, int
+        ):
+            raise DiagnosticPlanError(
+                f"channel.element_count: must be an integer, got {self.element_count!r}"
+            )
+        if self.element_count < 1:
+            raise DiagnosticPlanError(
+                f"channel.element_count: must be at least 1, got {self.element_count!r}"
             )
         expected = set(candidate.required_evidence)
         declared = set(self.evidence_bindings)
@@ -564,6 +743,11 @@ class DiagnosticPlan:
         Declared synthetic channels, sorted by identifier.
     deferrals
         Explicit deferrals, sorted by candidate identifier.
+    frames
+        Declared reference frames, sorted by identifier.
+    clock_relations
+        Declared clock synchronisation bounds, sorted by child then
+        parent identifier.
 
     Raises
     ------
@@ -576,6 +760,8 @@ class DiagnosticPlan:
     clocks: tuple[ClockModel, ...]
     channels: tuple[DiagnosticChannelPlan, ...]
     deferrals: tuple[DeferredCandidate, ...]
+    frames: tuple[ReferenceFrame, ...]
+    clock_relations: tuple[ClockRelation, ...]
 
     def __post_init__(self) -> None:
         """Validate cross-object invariants of the plan.
@@ -604,6 +790,15 @@ class DiagnosticPlan:
         deferral_ids = tuple(deferral.candidate_id for deferral in self.deferrals)
         if tuple(sorted(set(deferral_ids))) != deferral_ids:
             raise DiagnosticPlanError("plan.deferrals: must be unique and sorted")
+        frame_ids = tuple(frame.identifier for frame in self.frames)
+        if tuple(sorted(set(frame_ids))) != frame_ids:
+            raise DiagnosticPlanError("plan.frames: must be unique and sorted")
+        relation_keys = tuple(
+            (relation.child_identifier, relation.parent_identifier)
+            for relation in self.clock_relations
+        )
+        if tuple(sorted(set(relation_keys))) != relation_keys:
+            raise DiagnosticPlanError("plan.clock_relations: must be unique and sorted")
         clocks_by_id = {clock.identifier: clock for clock in self.clocks}
         for channel in self.channels:
             clock = clocks_by_id.get(channel.clock_identifier)
@@ -629,6 +824,41 @@ class DiagnosticPlan:
                     f"{clock.resolution_s!r} s cannot support the declared "
                     f"timing uncertainty {channel.timing_uncertainty_s!r} s"
                 )
+        for relation in self.clock_relations:
+            for role, identifier in (
+                ("child", relation.child_identifier),
+                ("parent", relation.parent_identifier),
+            ):
+                clock = clocks_by_id.get(identifier)
+                if clock is None:
+                    raise DiagnosticPlanError(
+                        f"plan.clock_relations: {role} clock {identifier!r} "
+                        "is not declared"
+                    )
+                if clock.kind is ClockKind.SIMULATION:
+                    raise DiagnosticPlanError(
+                        "plan.clock_relations: the simulation clock keeps "
+                        "model time and cannot be related to physical clocks"
+                    )
+        related_children = {
+            relation.child_identifier for relation in self.clock_relations
+        }
+        facility_ids = [
+            clock.identifier
+            for clock in self.clocks
+            if clock.kind is ClockKind.FACILITY_MONOTONIC
+        ]
+        if facility_ids:
+            for clock in self.clocks:
+                if (
+                    clock.kind is ClockKind.SHOT_EVENT_EPOCH
+                    and clock.identifier not in related_children
+                ):
+                    raise DiagnosticPlanError(
+                        f"plan.clock_relations: epoch clock "
+                        f"{clock.identifier!r} must declare a bound against "
+                        "a facility clock"
+                    )
         planned = {channel.candidate_id for channel in self.channels}
         deferred = set(deferral_ids)
         overlap = sorted(planned & deferred)
@@ -693,6 +923,32 @@ class DiagnosticPlan:
                         ),
                     )
                 )
+            if channel.acquisition_duration_s > SHOT_DURATION_CEILING_S:
+                findings.append(
+                    ConsistencyFinding(
+                        field=f"channels[{channel.identifier}].acquisition_duration_s",
+                        message=(
+                            "acquisition window "
+                            f"{channel.acquisition_duration_s:.2e} s is "
+                            "longer than the z-pinch discharge scale of up to "
+                            "~1 ms (Shumlak and Hartman 1995)"
+                        ),
+                    )
+                )
+            low_count, high_count = ELEMENT_COUNT_BAND
+            if channel.element_count > 1 and not (
+                low_count <= channel.element_count <= high_count
+            ):
+                findings.append(
+                    ConsistencyFinding(
+                        field=f"channels[{channel.identifier}].element_count",
+                        message=(
+                            f"array size {channel.element_count} is outside "
+                            "the common multi-element diagnostic range "
+                            "4-256 elements"
+                        ),
+                    )
+                )
             clock = clocks_by_id[channel.clock_identifier]
             if clock.resolution_s > 1.0 / channel.sample_rate_hz:
                 findings.append(
@@ -745,6 +1001,9 @@ class DiagnosticPlan:
                     "sample_rate_hz": channel.sample_rate_hz,
                     "max_signal_frequency_hz": channel.max_signal_frequency_hz,
                     "timing_uncertainty_s": channel.timing_uncertainty_s,
+                    "acquisition_start_s": channel.acquisition_start_s,
+                    "acquisition_duration_s": (channel.acquisition_duration_s),
+                    "element_count": channel.element_count,
                     "evidence_bindings": dict(
                         sorted(channel.evidence_bindings.items())
                     ),
@@ -758,6 +1017,26 @@ class DiagnosticPlan:
                     "reason": deferral.reason,
                 }
                 for deferral in self.deferrals
+            ],
+            "frames": [
+                {
+                    "identifier": frame.identifier,
+                    "kind": frame.kind.value,
+                    "description": frame.description,
+                }
+                for frame in self.frames
+            ],
+            "clock_relations": [
+                {
+                    "child_identifier": relation.child_identifier,
+                    "parent_identifier": relation.parent_identifier,
+                    "max_offset_s": relation.max_offset_s,
+                    "uncertainty_s": relation.uncertainty_s,
+                    "method": relation.method,
+                    "mapping_state": relation.mapping_state,
+                    "evidence_claimed": relation.evidence_claimed,
+                }
+                for relation in self.clock_relations
             ],
         }
 
@@ -1010,6 +1289,116 @@ def _evidence_bindings(record: dict[str, Any]) -> dict[str, str]:
     return result
 
 
+def _integer(record: dict[str, Any], field: str) -> int:
+    """Return one required integer field of a record.
+
+    Parameters
+    ----------
+    record
+        Mapping under inspection.
+    field
+        Key that must hold an integer.
+
+    Returns
+    -------
+    int
+        The integer value; booleans are rejected.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If the field is missing or not an integer.
+    """
+    value = record.get(field)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise DiagnosticPlanError(f"{field}: must be an integer, got {value!r}")
+    return value
+
+
+def _exact_entry_keys(
+    entry: dict[str, Any], allowed: frozenset[str], label: str
+) -> None:
+    """Refuse unknown members inside one nested entry.
+
+    Parameters
+    ----------
+    entry
+        Nested mapping under inspection.
+    allowed
+        Exactly the member names the entry may carry.
+    label
+        Boundary label for the rejection message.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If the entry carries any unknown member.
+    """
+    unknown = sorted(set(entry) - allowed)
+    if unknown:
+        raise DiagnosticPlanError(f"{label}: unknown members {unknown!r}")
+
+
+def _reject_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """Assemble a JSON object while refusing duplicate members.
+
+    Parameters
+    ----------
+    pairs
+        Key-value pairs in document order.
+
+    Returns
+    -------
+    dict[str, Any]
+        The assembled object.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If any key occurs more than once.
+    """
+    record: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in record:
+            raise DiagnosticPlanError(f"record: duplicate member {key!r} is rejected")
+        record[key] = value
+    return record
+
+
+_CLOCK_KEYS: Final = frozenset(
+    {"identifier", "kind", "epoch", "resolution_s", "uncertainty_s"}
+)
+_CHANNEL_KEYS: Final = frozenset(
+    {
+        "identifier",
+        "candidate_id",
+        "carrier",
+        "clock_identifier",
+        "sample_rate_hz",
+        "max_signal_frequency_hz",
+        "timing_uncertainty_s",
+        "acquisition_start_s",
+        "acquisition_duration_s",
+        "element_count",
+        "evidence_bindings",
+        "synthetic",
+    }
+)
+_DEFERRAL_KEYS: Final = frozenset({"candidate_id", "reason"})
+_FRAME_KEYS: Final = frozenset({"identifier", "kind", "description"})
+_RELATION_KEYS: Final = frozenset(
+    {
+        "child_identifier",
+        "parent_identifier",
+        "max_offset_s",
+        "uncertainty_s",
+        "method",
+        "mapping_state",
+        "evidence_claimed",
+    }
+)
+
+
 def plan_from_record(record: Any) -> DiagnosticPlan:
     """Build a validated diagnostic plan from a decoded record.
 
@@ -1031,7 +1420,15 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
     """
     if not isinstance(record, dict):
         raise DiagnosticPlanError("record: must be an object")
-    known = {"identifier", "binding", "clocks", "channels", "deferrals"}
+    known = {
+        "identifier",
+        "binding",
+        "clocks",
+        "channels",
+        "deferrals",
+        "frames",
+        "clock_relations",
+    }
     unknown = sorted(set(record) - known)
     if unknown:
         raise DiagnosticPlanError(f"record: unknown fields {unknown!r}")
@@ -1040,6 +1437,7 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
     for entry in _require_list(record, "clocks"):
         if not isinstance(entry, dict):
             raise DiagnosticPlanError("clocks[]: must be an object")
+        _exact_entry_keys(entry, _CLOCK_KEYS, "clocks[]")
         clocks.append(
             ClockModel(
                 identifier=_string(entry, "identifier"),
@@ -1053,6 +1451,7 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
     for entry in _require_list(record, "channels"):
         if not isinstance(entry, dict):
             raise DiagnosticPlanError("channels[]: must be an object")
+        _exact_entry_keys(entry, _CHANNEL_KEYS, "channels[]")
         channels.append(
             DiagnosticChannelPlan(
                 identifier=_string(entry, "identifier"),
@@ -1062,6 +1461,9 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
                 sample_rate_hz=_number(entry, "sample_rate_hz"),
                 max_signal_frequency_hz=_number(entry, "max_signal_frequency_hz"),
                 timing_uncertainty_s=_optional_number(entry, "timing_uncertainty_s"),
+                acquisition_start_s=_number(entry, "acquisition_start_s"),
+                acquisition_duration_s=_number(entry, "acquisition_duration_s"),
+                element_count=_integer(entry, "element_count"),
                 evidence_bindings=_evidence_bindings(entry),
                 synthetic=_boolean(entry, "synthetic"),
             )
@@ -1070,10 +1472,39 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
     for entry in _require_list(record, "deferrals"):
         if not isinstance(entry, dict):
             raise DiagnosticPlanError("deferrals[]: must be an object")
+        _exact_entry_keys(entry, _DEFERRAL_KEYS, "deferrals[]")
         deferrals.append(
             DeferredCandidate(
                 candidate_id=_string(entry, "candidate_id"),
                 reason=_string(entry, "reason"),
+            )
+        )
+    frames = []
+    for entry in _require_list(record, "frames"):
+        if not isinstance(entry, dict):
+            raise DiagnosticPlanError("frames[]: must be an object")
+        _exact_entry_keys(entry, _FRAME_KEYS, "frames[]")
+        frames.append(
+            ReferenceFrame(
+                identifier=_string(entry, "identifier"),
+                kind=_enum_value(entry, "kind", FrameKind),
+                description=_string(entry, "description"),
+            )
+        )
+    relations = []
+    for entry in _require_list(record, "clock_relations"):
+        if not isinstance(entry, dict):
+            raise DiagnosticPlanError("clock_relations[]: must be an object")
+        _exact_entry_keys(entry, _RELATION_KEYS, "clock_relations[]")
+        relations.append(
+            ClockRelation(
+                child_identifier=_string(entry, "child_identifier"),
+                parent_identifier=_string(entry, "parent_identifier"),
+                max_offset_s=_number(entry, "max_offset_s"),
+                uncertainty_s=_number(entry, "uncertainty_s"),
+                method=_string(entry, "method"),
+                mapping_state=_string(entry, "mapping_state"),
+                evidence_claimed=_boolean(entry, "evidence_claimed"),
             )
         )
     return DiagnosticPlan(
@@ -1089,6 +1520,8 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
         clocks=tuple(clocks),
         channels=tuple(channels),
         deferrals=tuple(deferrals),
+        frames=tuple(frames),
+        clock_relations=tuple(relations),
     )
 
 
@@ -1098,7 +1531,8 @@ def plan_from_bytes(data: bytes) -> DiagnosticPlan:
     Parameters
     ----------
     data
-        UTF-8 JSON document; NaN and infinity literals are rejected.
+        UTF-8 JSON document; NaN and infinity literals, duplicate
+        members, and non-canonical byte forms are rejected.
 
     Returns
     -------
@@ -1117,7 +1551,14 @@ def plan_from_bytes(data: bytes) -> DiagnosticPlan:
         )
 
     try:
-        record = json.loads(data.decode("utf-8"), parse_constant=_reject_constant)
+        record = json.loads(
+            data.decode("utf-8"),
+            parse_constant=_reject_constant,
+            object_pairs_hook=_reject_duplicates,
+        )
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise DiagnosticPlanError(f"record: invalid JSON document: {exc}") from exc
-    return plan_from_record(record)
+    plan = plan_from_record(record)
+    if plan.canonical_bytes() != data:
+        raise DiagnosticPlanError("record: non-canonical document is rejected")
+    return plan

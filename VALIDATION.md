@@ -138,3 +138,21 @@ the tests) is verified together with positive, tamper, wrong-project,
 wrong-configuration, registry-drift, duplicate-member, and non-finite
 rejection paths, all under the 100 % coverage gate. The envelope claims
 nothing beyond the enveloped synthetic declaration.
+
+### Typed frames, clock relations, and acquisition geometry
+
+The deepened model adds typed reference frames (per-repository allowed
+`FrameKind` subset; every noncyclic `coordinate_frame` binding must
+reference a declared frame), clock synchronisation relations
+(synthetic offset/uncertainty BOUNDS between declared non-simulation
+clocks with an explicit method statement — no correlation evidence is
+claimed and no clock is mapped to physical wall time), and per-channel
+acquisition windows and element counts with device-cited advisory
+scales. Both decoders are hardened per the SPO intake architecture:
+recursive exact-key refusal in every nested entry, duplicate-member
+refusal, and byte-canonical refusal (a document that is not exactly
+canonical bytes is rejected). The envelope is `1.1.0`, adding
+`manifest_sha256` — the SHA-256 of the committed canonical
+`reactor-domain.json` — verified in tests against the committed file.
+All declarations remain synthetic; nothing here observes or controls
+anything.
