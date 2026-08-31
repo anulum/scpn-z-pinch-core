@@ -13,10 +13,12 @@ SCPN Z-Pinch Core — Architecture
 ## Purpose and evidence state
 
 `SCPN-Z-PINCH-CORE` is the device-family owner for Z-pinch systems in the
-SCPN Reactor Systems Research Group portfolio. The repository is
-`architecture_only`: every section below describes boundaries and
-contracts, not implemented capability. The capability and claim inventories
-are empty; both derived artefacts are generated and drift-checked.
+SCPN Reactor Systems Research Group portfolio. The
+repository owns one implemented capability — the device configuration model
+at `computational_prototype` (`src/scpn_z_pinch_core/`, design record ADR 0002,
+evidence record `VALIDATION.md#device-configuration-model`). Every other
+section below describes boundaries and contracts. The claim inventory is
+empty; capability and claim inventories are generated and drift-checked.
 
 ## The five-surface boundary
 

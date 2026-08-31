@@ -23,28 +23,32 @@ this repository until it appears in the capability inventory with evidence.
 - Local and workflow gate definitions (lint, typing, tests, coverage,
   REUSE, security audit, SBOM, documentation checks).
 
-## Planned (no implementation exists; ordering is not a commitment)
+- **Device configuration model** (landed 2026-08-31) — validated
+  pinch-column and discharge objects for `sheared_flow_z_pinch` and
+  `z_pinch` with hard flow-shear class invariants, the Bennett-relation
+  temperature estimate (Bennett 1934), a documented plasma-regime
+  advisory window, canonical digests, and the SPO registry data pin;
+  `computational_prototype` (ADR 0002,
+  `VALIDATION.md#device-configuration-model`). Electrode/injector
+  geometry classes remain future work under the same capability.
 
-1. **Device configuration model** — typed configuration policy for the
-   Z-pinch family (electrode/injector geometry classes, drive-current
-   envelopes, flow-shear parameter ranges), with evidence-maturity target
-   `computational_prototype`.
-2. **Diagnostic and clock semantics** — declared current/voltage,
+## Planned (no implementation exists; ordering is not a commitment)
+1. **Diagnostic and clock semantics** — declared current/voltage,
    imaging, mode-amplitude, flow-profile, and neutron channels with
    nanosecond clock identities aligned with the SCPN Phase Orchestrator
    semantic profile.
-3. **Safety-envelope declaration** — machine-readable operational envelope
+2. **Safety-envelope declaration** — machine-readable operational envelope
    (bank, current, repetition, electrode bounds) consumed by the CONTROL
    adapter contract.
-4. **CONTROL adapter implementation** — device-owned adapter against the
+3. **CONTROL adapter implementation** — device-owned adapter against the
    published specification, with replay fixtures and HIL evidence,
    targeting `control_research_ready` only after replay and HIL
    acceptance.
-5. **Solver seam consumption** — versioned consumption of exact
+4. **Solver seam consumption** — versioned consumption of exact
    `SCPN-FUSION-CORE` seams for pinch equilibrium and stability surfaces,
    strictly after the family migration gate proves exact replacement; no
    solver code is copied.
-6. **Facility-data correlation** — preregistered acceptance contracts
+5. **Facility-data correlation** — preregistered acceptance contracts
    against identified facility or published experimental data, targeting
    `experiment_correlated` per capability.
 

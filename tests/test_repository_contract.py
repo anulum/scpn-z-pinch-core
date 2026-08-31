@@ -53,8 +53,14 @@ REQUIRED_PATHS = (
     "docs/THREAT_MODEL.md",
     "docs/adr/0001-repository-boundary.md",
     "pyproject.toml",
+    "conftest.py",
+    "docs/adr/0002-device-configuration-model.md",
     "reactor-domain.json",
     "requirements-dev.txt",
+    "src/scpn_z_pinch_core/__init__.py",
+    "src/scpn_z_pinch_core/configuration.py",
+    "src/scpn_z_pinch_core/errors.py",
+    "src/scpn_z_pinch_core/parameters.py",
     "studio/portfolio-descriptor.json",
     "studio/portfolio-descriptor.schema.json",
     "tools/preflight.py",
@@ -115,8 +121,14 @@ def test_manifest_declares_exact_configuration_assignment() -> None:
         "sheared_flow_z_pinch",
         "z_pinch",
     ]
-    assert manifest["evidence_maturity"] == "architecture_only"
-    assert manifest["capabilities"] == []
+    assert manifest["evidence_maturity"] == "computational_prototype"
+    assert manifest["capabilities"] == [
+        {
+            "identifier": "device_configuration_model",
+            "evidence_maturity": "computational_prototype",
+            "evidence_pointer": "VALIDATION.md#device-configuration-model",
+        }
+    ]
     assert manifest["claims"] == []
 
 
@@ -130,7 +142,7 @@ def test_descriptor_and_inventory_embed_current_manifest_digest() -> None:
     assert descriptor["source"]["manifest_sha256"] == digest
     assert inventory["source"]["manifest_sha256"] == digest
     assert descriptor["lifecycle"]["state"] == "not_federated"
-    assert inventory["implemented_capability_count"] == 0
+    assert inventory["implemented_capability_count"] == 1
 
 
 def test_no_agent_state_trees_exist() -> None:
@@ -153,3 +165,22 @@ def test_descriptor_matches_ratified_schema() -> None:
     assert sorted(schema["required"]) == sorted(descriptor)
     assert sorted(schema["properties"]) == sorted(descriptor)
     assert descriptor["schema_version"] == "1.1.0"
+
+
+def test_package_agrees_with_manifest_truth() -> None:
+    """The device model package matches the manifest's pins and ownership."""
+    from scpn_z_pinch_core import OWNED_CONFIGURATIONS, RegistryBinding
+
+    manifest = load_json_object(REPO / "reactor-domain.json")
+    assert list(OWNED_CONFIGURATIONS) == manifest["configurations"]
+    pin = manifest["spo_registry"]
+    binding = RegistryBinding(
+        version=pin["version"], digest_sha256=pin["digest_sha256"]
+    )
+    assert binding.version == pin["version"]
+    assert binding.digest_sha256 == pin["digest_sha256"]
+
+
+def test_typed_package_marker_exists() -> None:
+    """The PEP 561 marker is present (empty by design, so no size check)."""
+    assert (REPO / "src" / "scpn_z_pinch_core" / "py.typed").is_file()

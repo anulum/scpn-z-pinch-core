@@ -21,16 +21,21 @@ from manifest_io import sha256_of_file
 
 REPO = Path(__file__).resolve().parents[1]
 MANIFEST = REPO / "reactor-domain.json"
+CAPABILITY = {
+    "identifier": "device_configuration_model",
+    "evidence_maturity": "computational_prototype",
+    "evidence_pointer": "VALIDATION.md#device-configuration-model",
+}
 
 
-def test_inventory_reports_zero_capabilities() -> None:
-    """At architecture-only maturity the inventory is truthfully empty."""
+def test_inventory_reports_exact_capability_set() -> None:
+    """The inventory carries exactly the manifest's capability claims."""
     inventory = generate_inventory(MANIFEST)
     assert inventory["schema"] == "scpn.capability-inventory.v1"
     assert inventory["project"] == "SCPN-Z-PINCH-CORE"
-    assert inventory["evidence_maturity"] == "architecture_only"
-    assert inventory["implemented_capability_count"] == 0
-    assert inventory["capabilities"] == []
+    assert inventory["evidence_maturity"] == "computational_prototype"
+    assert inventory["implemented_capability_count"] == 1
+    assert inventory["capabilities"] == [CAPABILITY]
     assert inventory["claims"] == []
     assert inventory["source"]["manifest_sha256"] == sha256_of_file(MANIFEST)
 

@@ -38,9 +38,9 @@ jobs:
       - name: Ruff format
         run: ruff format --check .
       - name: Mypy strict
-        run: mypy --strict tools tests
+        run: mypy --strict src tools tests
       - name: Tests with complete coverage
-        run: pytest -q --cov=tools --cov-branch --cov-fail-under=100
+        run: pytest -q --cov=src --cov=tools --cov-branch --cov-fail-under=100
       - name: Reactor domain manifest
         run: python tools/validate_reactor_domain.py reactor-domain.json
       - name: Studio descriptor drift

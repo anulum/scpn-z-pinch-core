@@ -4,11 +4,28 @@
 # © Code 2020–2026 Miroslav Šotek. All rights reserved.
 # ORCID: 0009-0009-3560-0851
 # Contact: www.anulum.li | protoscience@anulum.li
-# SCPN Z-Pinch Core — validation tooling configuration
-#
-# This file configures the repository's Python-based validation tooling only.
-# No distributable domain package exists at architecture-only maturity, so no
-# [project] metadata, entry points, or runtime dependencies are declared.
+# SCPN Z-Pinch Core — package and validation tooling configuration
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scpn-z-pinch-core"
+description = "Device configuration model of the SCPN-Z-PINCH-CORE device family"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "AGPL-3.0-or-later"
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = { attr = "scpn_z_pinch_core.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+scpn_z_pinch_core = ["py.typed"]
 
 [tool.ruff]
 target-version = "py312"
@@ -47,6 +64,7 @@ convention = "numpy"
 
 [tool.ruff.lint.isort]
 known-first-party = [
+    "scpn_z_pinch_core",
     "check_commit_trailers",
     "manifest_io",
     "validate_reactor_domain",
@@ -60,7 +78,7 @@ strict = true
 python_version = "3.12"
 warn_unreachable = true
 pretty = true
-mypy_path = "tools"
+mypy_path = ["tools", "src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -68,7 +86,7 @@ addopts = "-q"
 
 [tool.coverage.run]
 branch = true
-source = ["tools"]
+source = ["tools", "src"]
 
 [tool.coverage.report]
 fail_under = 100

@@ -8,7 +8,7 @@
   },
   "device_family": "z_pinch",
   "confinement_family": "self_magnetic",
-  "evidence_maturity": "architecture_only",
+  "evidence_maturity": "computational_prototype",
   "license": "AGPL-3.0-or-later",
   "spo_registry": {
     "version": "1.0.0",
@@ -88,17 +88,24 @@
   },
   "studio_integration": {
     "state": "not_federated",
-    "reason": "architecture_only: no implemented capability exists to federate",
+    "reason": "federation gates have not run; capabilities remain repository-local",
     "descriptor": "studio/portfolio-descriptor.json"
   },
-  "capabilities": [],
+  "capabilities": [
+    {
+      "identifier": "device_configuration_model",
+      "evidence_maturity": "computational_prototype",
+      "evidence_pointer": "VALIDATION.md#device-configuration-model"
+    }
+  ],
   "claims": [],
   "non_claims": [
     "not machine-ready",
     "not safety-certified",
     "not autonomous-plant-ready",
     "not commercially reactor-ready",
-    "no implemented solver, controller, benchmark, dataset, or deployable artefact",
-    "no experimental correlation"
+    "no implemented solver, controller, benchmark, dataset, or published artefact",
+    "no experimental correlation",
+    "no parameter set describes or validates any real machine"
   ]
 }

@@ -9,13 +9,16 @@
 """Fail closed when the reactor-domain manifest violates its contract.
 
 The validator enforces the ``scpn.reactor-domain.v1`` schema, the
-architecture-only truthfulness rules of the SCPN reactor family repository
-standard (empty capability and claim inventories, ``not_federated`` Studio
-state, no adapter implementation), the review-only SPO profile, the
-no-direct-actuation adapter boundary, and the machine-protection final-veto
-declaration. With ``--map`` it additionally proves exact agreement with the
-portfolio machine map: project membership, the assigned configuration set,
-and the pinned source-registry version and digest.
+maturity-independent boundary invariants of the SCPN reactor family
+repository standard (empty claims inventory, ``not_federated`` Studio
+state, no adapter implementation, empty solver seams), the per-state
+capability rules (empty at ``architecture_only``; the ratified item shape
+with resolvable evidence pointers and the ADR 0002 ceiling rule at every
+implemented state), the review-only SPO profile, the no-direct-actuation
+adapter boundary, and the machine-protection final-veto declaration. With
+``--map`` it additionally proves exact agreement with the portfolio machine
+map: project membership, the assigned configuration set, and the pinned
+source-registry version and digest.
 """
 
 from __future__ import annotations
@@ -109,8 +112,16 @@ def _validate_configurations(
     return result
 
 
-def _validate_architecture_only(manifest: dict[str, Any], findings: list[str]) -> None:
-    """Enforce the truthfulness rules of the architecture-only state.
+def _validate_boundary_invariants(
+    manifest: dict[str, Any], findings: list[str]
+) -> None:
+    """Enforce the boundary rules that hold at every maturity state.
+
+    The claims inventory stays empty until a claims contract exists, the
+    adapter implementation stays null until the CONTROL adapter lane
+    lands, the Studio state stays ``not_federated`` until federation
+    gates pass, solver seams stay empty until the family migration gate
+    proves an exact replacement, and the non-claims list never empties.
 
     Parameters
     ----------
@@ -119,26 +130,113 @@ def _validate_architecture_only(manifest: dict[str, Any], findings: list[str]) -
     findings
         Mutable finding sink.
     """
-    if manifest.get("capabilities") != []:
-        findings.append("capabilities: must be [] at architecture_only")
     if manifest.get("claims") != []:
-        findings.append("claims: must be [] at architecture_only")
+        findings.append("claims: must be [] until a claims contract exists")
     adapter = manifest.get("control_adapter")
     if isinstance(adapter, dict) and adapter.get("implementation") is not None:
         findings.append(
-            "control_adapter.implementation: must be null at architecture_only"
+            "control_adapter.implementation: must be null until the "
+            "CONTROL adapter lane lands"
         )
     studio = manifest.get("studio_integration")
     if not isinstance(studio, dict) or studio.get("state") != "not_federated":
         findings.append(
-            "studio_integration.state: must be not_federated at architecture_only"
+            "studio_integration.state: must be not_federated until "
+            "federation gates pass"
         )
     non_claims = manifest.get("non_claims")
     if not isinstance(non_claims, list) or not non_claims:
-        findings.append("non_claims: must be a non-empty list at architecture_only")
+        findings.append("non_claims: must be a non-empty list")
     seams = manifest.get("fusion_solver_seams")
     if not isinstance(seams, dict) or seams.get("active") != []:
-        findings.append("fusion_solver_seams.active: must be [] at architecture_only")
+        findings.append(
+            "fusion_solver_seams.active: must be [] until the family "
+            "migration gate proves an exact replacement"
+        )
+
+
+def _validate_capabilities(
+    manifest: dict[str, Any],
+    maturity: str,
+    manifest_dir: Path,
+    findings: list[str],
+) -> None:
+    """Validate the populated capability inventory of an implemented state.
+
+    Enforces the ratified capability item shape, identifier hygiene and
+    uniqueness, implemented-state enumeration, evidence pointers that
+    resolve to committed files, and the ADR 0002 ceiling rule: the
+    repository-level maturity equals the highest per-capability state.
+
+    Parameters
+    ----------
+    manifest
+        Decoded manifest object.
+    maturity
+        Repository-level evidence-maturity state.
+    manifest_dir
+        Directory the evidence pointers resolve against.
+    findings
+        Mutable finding sink.
+    """
+    capabilities = manifest.get("capabilities")
+    if not isinstance(capabilities, list) or not capabilities:
+        findings.append(f"capabilities: must be a non-empty list at {maturity}")
+        return
+    allowed_keys = {
+        "identifier",
+        "evidence_maturity",
+        "evidence_pointer",
+        "contract_version",
+    }
+    implemented_states = EVIDENCE_STATES[1:]
+    identifiers: list[str] = []
+    highest = -1
+    for index, item in enumerate(capabilities):
+        if not isinstance(item, dict):
+            findings.append(f"capabilities[{index}]: must be an object")
+            continue
+        unknown = sorted(set(item) - allowed_keys)
+        if unknown:
+            findings.append(f"capabilities[{index}]: unknown fields {unknown!r}")
+        identifier = item.get("identifier")
+        if not isinstance(identifier, str) or IDENTIFIER.fullmatch(identifier) is None:
+            findings.append(
+                f"capabilities[{index}].identifier: invalid identifier {identifier!r}"
+            )
+        else:
+            identifiers.append(identifier)
+        state = item.get("evidence_maturity")
+        if state not in implemented_states:
+            findings.append(
+                f"capabilities[{index}].evidence_maturity: must be one of "
+                f"{implemented_states!r}, got {state!r}"
+            )
+        else:
+            highest = max(highest, EVIDENCE_STATES.index(state))
+        pointer = item.get("evidence_pointer")
+        if not isinstance(pointer, str) or not pointer:
+            findings.append(
+                f"capabilities[{index}].evidence_pointer: must be a non-empty string"
+            )
+        elif not (manifest_dir / pointer.split("#", maxsplit=1)[0]).is_file():
+            findings.append(
+                f"capabilities[{index}].evidence_pointer: no committed file "
+                f"behind {pointer!r}"
+            )
+        contract = item.get("contract_version")
+        if contract is not None and (not isinstance(contract, str) or not contract):
+            findings.append(
+                f"capabilities[{index}].contract_version: must be a "
+                "non-empty string when present"
+            )
+    if len(identifiers) != len(set(identifiers)):
+        findings.append("capabilities: identifiers must be unique")
+    if highest >= 0 and EVIDENCE_STATES.index(maturity) != highest:
+        findings.append(
+            "evidence_maturity: must equal the highest capability state "
+            f"{EVIDENCE_STATES[highest]!r} (ADR 0002 ceiling rule)"
+        )
 
 
 def _validate_safety(manifest: dict[str, Any], findings: list[str]) -> None:
@@ -320,10 +418,14 @@ def validate_manifest(manifest_path: Path, map_path: Path | None) -> list[str]:
     if manifest.get("license") != LICENSE_IDENTIFIER:
         findings.append(f"license: must be {LICENSE_IDENTIFIER!r}")
     maturity = manifest.get("evidence_maturity")
+    _validate_boundary_invariants(manifest, findings)
     if maturity not in EVIDENCE_STATES:
         findings.append(f"evidence_maturity: unknown state {maturity!r}")
-    if maturity == "architecture_only":
-        _validate_architecture_only(manifest, findings)
+    elif maturity == "architecture_only":
+        if manifest.get("capabilities") != []:
+            findings.append("capabilities: must be [] at architecture_only")
+    else:
+        _validate_capabilities(manifest, maturity, manifest_path.parent, findings)
     owned = manifest.get("owned_domains")
     if not isinstance(owned, list) or not owned:
         findings.append("owned_domains: must be a non-empty list")

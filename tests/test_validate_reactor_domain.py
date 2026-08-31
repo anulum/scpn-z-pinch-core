@@ -70,7 +70,11 @@ def test_missing_manifest_is_one_finding(tmp_path: Path) -> None:
         ({"device_family": 7}, "device_family:"),
         ({"license": "MIT"}, "license:"),
         ({"evidence_maturity": "finished"}, "evidence_maturity:"),
-        ({"capabilities": [{"name": "x"}]}, "capabilities:"),
+        ({"capabilities": [{"name": "x"}]}, "capabilities[0]"),
+        (
+            {"evidence_maturity": "architecture_only"},
+            "must be [] at architecture_only",
+        ),
         ({"claims": ["fast"]}, "claims:"),
         ({"non_claims": []}, "non_claims:"),
         ({"owned_domains": []}, "owned_domains:"),
@@ -172,13 +176,164 @@ def test_missing_protection_statement(tmp_path: Path) -> None:
     assert any("machine_protection.statement:" in item for item in findings)
 
 
-def test_non_architecture_maturity_skips_empty_inventory_rules(
+def write_manifest_with_evidence(tmp_path: Path, manifest: dict[str, Any]) -> Path:
+    """Serialise a manifest and satisfy its evidence pointers on disk."""
+    (tmp_path / "VALIDATION.md").write_text("# evidence\n", encoding="utf-8")
+    return write_manifest(tmp_path, manifest)
+
+
+def test_populated_capabilities_pass_with_resolvable_evidence(
     tmp_path: Path,
 ) -> None:
-    """Later maturity states are not forced to keep empty inventories."""
-    manifest = mutated(evidence_maturity="computational_prototype")
+    """A well-formed implemented-state inventory yields no findings."""
+    path = write_manifest_with_evidence(tmp_path, mutated())
+    assert validate_manifest(path, None) == []
+
+
+@pytest.mark.parametrize(
+    ("capabilities", "maturity", "fragment"),
+    [
+        ([], "computational_prototype", "must be a non-empty list"),
+        (["text"], "computational_prototype", "capabilities[0]: must be an object"),
+        (
+            [
+                {
+                    "identifier": "device_configuration_model",
+                    "evidence_maturity": "computational_prototype",
+                    "evidence_pointer": "VALIDATION.md#x",
+                    "surprise": 1,
+                }
+            ],
+            "computational_prototype",
+            "unknown fields",
+        ),
+        (
+            [
+                {
+                    "identifier": "Bad-Name",
+                    "evidence_maturity": "computational_prototype",
+                    "evidence_pointer": "VALIDATION.md#x",
+                }
+            ],
+            "computational_prototype",
+            "invalid identifier",
+        ),
+        (
+            [
+                {
+                    "identifier": "model_a",
+                    "evidence_maturity": "architecture_only",
+                    "evidence_pointer": "VALIDATION.md#x",
+                }
+            ],
+            "computational_prototype",
+            "evidence_maturity: must be one of",
+        ),
+        (
+            [
+                {
+                    "identifier": "model_a",
+                    "evidence_maturity": "computational_prototype",
+                    "evidence_pointer": "",
+                }
+            ],
+            "computational_prototype",
+            "evidence_pointer: must be a non-empty string",
+        ),
+        (
+            [
+                {
+                    "identifier": "model_a",
+                    "evidence_maturity": "computational_prototype",
+                    "evidence_pointer": "ABSENT.md#x",
+                }
+            ],
+            "computational_prototype",
+            "no committed file behind",
+        ),
+        (
+            [
+                {
+                    "identifier": "model_a",
+                    "evidence_maturity": "computational_prototype",
+                    "evidence_pointer": "VALIDATION.md#x",
+                    "contract_version": "",
+                }
+            ],
+            "computational_prototype",
+            "contract_version",
+        ),
+        (
+            [
+                {
+                    "identifier": "model_a",
+                    "evidence_maturity": "computational_prototype",
+                    "evidence_pointer": "VALIDATION.md#x",
+                },
+                {
+                    "identifier": "model_a",
+                    "evidence_maturity": "computational_prototype",
+                    "evidence_pointer": "VALIDATION.md#x",
+                },
+            ],
+            "computational_prototype",
+            "identifiers must be unique",
+        ),
+        (
+            [
+                {
+                    "identifier": "model_a",
+                    "evidence_maturity": "computational_prototype",
+                    "evidence_pointer": "VALIDATION.md#x",
+                }
+            ],
+            "benchmark_validated",
+            "ceiling rule",
+        ),
+    ],
+)
+def test_capability_inventory_violations(
+    tmp_path: Path,
+    capabilities: list[Any],
+    maturity: str,
+    fragment: str,
+) -> None:
+    """Each capability-inventory violation yields its precise finding."""
+    manifest = mutated(capabilities=capabilities, evidence_maturity=maturity)
+    path = write_manifest_with_evidence(tmp_path, manifest)
+    findings = validate_manifest(path, None)
+    assert any(fragment in finding for finding in findings), findings
+
+
+def test_architecture_only_with_empty_inventory_is_valid(tmp_path: Path) -> None:
+    """An architecture-only manifest with empty capabilities passes."""
+    manifest = mutated(
+        evidence_maturity="architecture_only",
+        capabilities=[],
+        studio_integration={
+            "state": "not_federated",
+            "reason": "architecture_only: no implemented capability exists",
+            "descriptor": "studio/portfolio-descriptor.json",
+        },
+    )
     findings = validate_manifest(write_manifest(tmp_path, manifest), None)
-    assert not any(finding.startswith("capabilities:") for finding in findings)
+    assert findings == []
+
+
+def test_valid_contract_version_is_accepted(tmp_path: Path) -> None:
+    """A non-empty contract version on a capability item is valid."""
+    manifest = mutated(
+        capabilities=[
+            {
+                "identifier": "device_configuration_model",
+                "evidence_maturity": "computational_prototype",
+                "evidence_pointer": "VALIDATION.md#x",
+                "contract_version": "1.0.0",
+            }
+        ]
+    )
+    path = write_manifest_with_evidence(tmp_path, manifest)
+    assert validate_manifest(path, None) == []
 
 
 def test_map_cross_check_rejects_unreadable_map(tmp_path: Path) -> None:

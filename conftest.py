@@ -6,7 +6,7 @@
 # Contact: www.anulum.li | protoscience@anulum.li
 # SCPN Z-Pinch Core — pytest import path configuration
 
-"""Make the ``tools`` modules importable by the test suite."""
+"""Make the ``tools`` modules and ``src`` package importable in tests."""
 
 from __future__ import annotations
 
@@ -14,3 +14,4 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))

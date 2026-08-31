@@ -31,7 +31,14 @@ def test_descriptor_projects_identity_without_authority() -> None:
         "sheared_flow_z_pinch",
         "z_pinch",
     ]
-    assert descriptor["capabilities"] == []
+    assert descriptor["capabilities"] == [
+        {
+            "identifier": "device_configuration_model",
+            "evidence_maturity": "computational_prototype",
+            "evidence_pointer": "VALIDATION.md#device-configuration-model",
+        }
+    ]
+    assert descriptor["evidence_maturity"] == "computational_prototype"
     assert descriptor["lifecycle"]["state"] == "not_federated"
     assert descriptor["schema_version"] == "1.1.0"
     assert descriptor["source"]["repository"] == descriptor["project"]

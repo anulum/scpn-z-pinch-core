@@ -8,10 +8,11 @@
 
 version = 1
 
-# JSON cannot carry comments, so machine-readable artefacts are annotated
-# here instead of in-file.
+# JSON cannot carry comments and the PEP 561 marker must stay empty, so
+# machine-readable artefacts are annotated here instead of in-file.
 [[annotations]]
 path = [
+    "src/scpn_z_pinch_core/py.typed",
     "reactor-domain.json",
     "studio/portfolio-descriptor.json",
     "studio/portfolio-descriptor.schema.json",
