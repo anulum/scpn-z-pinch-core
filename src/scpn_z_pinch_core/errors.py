@@ -4,15 +4,23 @@
 # © Code 2020–2026 Miroslav Šotek. All rights reserved.
 # ORCID: 0009-0009-3560-0851
 # Contact: www.anulum.li | protoscience@anulum.li
-# SCPN Z-Pinch Core — device configuration model errors
+# SCPN Z-Pinch Core — device capability model errors
 
-"""Error surface of the device configuration model."""
+"""Error surface of the device capability models."""
 
 from __future__ import annotations
 
 
 class DeviceConfigurationError(ValueError):
     """Raised when a device configuration value violates a model invariant.
+
+    Every rejection carries the offending field and the violated bound in
+    its message; nothing is clamped or silently corrected.
+    """
+
+
+class DiagnosticPlanError(ValueError):
+    """Raised when a diagnostic or clock declaration violates the model.
 
     Every rejection carries the offending field and the violated bound in
     its message; nothing is clamped or silently corrected.

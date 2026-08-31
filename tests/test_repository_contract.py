@@ -55,11 +55,13 @@ REQUIRED_PATHS = (
     "pyproject.toml",
     "conftest.py",
     "docs/adr/0002-device-configuration-model.md",
+    "docs/adr/0003-diagnostic-clock-semantics.md",
     "reactor-domain.json",
     "requirements-dev.txt",
     "src/scpn_z_pinch_core/__init__.py",
     "src/scpn_z_pinch_core/configuration.py",
     "src/scpn_z_pinch_core/errors.py",
+    "src/scpn_z_pinch_core/observability.py",
     "src/scpn_z_pinch_core/parameters.py",
     "studio/portfolio-descriptor.json",
     "studio/portfolio-descriptor.schema.json",
@@ -127,7 +129,12 @@ def test_manifest_declares_exact_configuration_assignment() -> None:
             "identifier": "device_configuration_model",
             "evidence_maturity": "computational_prototype",
             "evidence_pointer": "VALIDATION.md#device-configuration-model",
-        }
+        },
+        {
+            "identifier": "diagnostic_clock_semantics",
+            "evidence_maturity": "computational_prototype",
+            "evidence_pointer": "VALIDATION.md#diagnostic-and-clock-semantics",
+        },
     ]
     assert manifest["claims"] == []
 
@@ -142,7 +149,7 @@ def test_descriptor_and_inventory_embed_current_manifest_digest() -> None:
     assert descriptor["source"]["manifest_sha256"] == digest
     assert inventory["source"]["manifest_sha256"] == digest
     assert descriptor["lifecycle"]["state"] == "not_federated"
-    assert inventory["implemented_capability_count"] == 1
+    assert inventory["implemented_capability_count"] == 2
 
 
 def test_no_agent_state_trees_exist() -> None:

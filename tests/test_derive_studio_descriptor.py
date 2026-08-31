@@ -36,7 +36,12 @@ def test_descriptor_projects_identity_without_authority() -> None:
             "identifier": "device_configuration_model",
             "evidence_maturity": "computational_prototype",
             "evidence_pointer": "VALIDATION.md#device-configuration-model",
-        }
+        },
+        {
+            "identifier": "diagnostic_clock_semantics",
+            "evidence_maturity": "computational_prototype",
+            "evidence_pointer": "VALIDATION.md#diagnostic-and-clock-semantics",
+        },
     ]
     assert descriptor["evidence_maturity"] == "computational_prototype"
     assert descriptor["lifecycle"]["state"] == "not_federated"
