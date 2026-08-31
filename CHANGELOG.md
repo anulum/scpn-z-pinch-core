@@ -14,6 +14,17 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Added
 
+- Portable diagnostic-plan envelope
+  (`src/scpn_z_pinch_core/plan_envelope.py`,
+  `scpn.reactor-diagnostic-plan-envelope.v1` version `1.0.0`): a
+  producer-owned, canonically serialised wrapper carrying project
+  identity, exact owned configurations, capability and maturity,
+  synthetic/review-only/non-actuating statements, both SPO registry
+  pins, the inner plan's SHA-256, the producer revision, and fixed
+  no-observation/no-control non-claims; strict parsers refuse unknown,
+  duplicate, and non-finite members, and an immutable committed fixture
+  exercises the exchange end to end.
+
 - Diagnostic and clock semantics model
   (`src/scpn_z_pinch_core/observability.py`), the second implemented
   capability at `computational_prototype`: frozen clock, channel,

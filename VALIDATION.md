@@ -121,3 +121,20 @@ Bounded claims — what is NOT claimed:
 - No SPO semantic-profile ingress is declared; the profile registry
   `ingress_state` for this device family remains `not_declared`, and
   no adapter, producer, or handoff exists in this repository.
+
+### Portable plan envelope
+
+The `diagnostic_clock_semantics` capability additionally exercises a
+producer-owned portable envelope
+(`src/scpn_z_pinch_core/plan_envelope.py`,
+`scpn.reactor-diagnostic-plan-envelope.v1` version `1.0.0`): one
+canonically serialised object carrying the exact project identity and
+owned configurations, the capability and its maturity, the
+synthetic/review-only/non-actuating statements, both SPO registry pins,
+the SHA-256 digest of the inner canonical plan, the producer revision,
+and fixed no-observation/no-control non-claims. The committed immutable
+fixture (`tests/data/plan_envelope_fixture.json`, byte hash pinned in
+the tests) is verified together with positive, tamper, wrong-project,
+wrong-configuration, registry-drift, duplicate-member, and non-finite
+rejection paths, all under the 100 % coverage gate. The envelope claims
+nothing beyond the enveloped synthetic declaration.
