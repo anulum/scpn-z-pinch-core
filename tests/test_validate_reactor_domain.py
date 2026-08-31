@@ -21,11 +21,16 @@ from validate_reactor_domain import main, validate_manifest
 
 REPO = Path(__file__).resolve().parents[1]
 MANIFEST = REPO / "reactor-domain.json"
-MACHINE_MAP = (
-    REPO.parent.parent
-    / "agentic-shared"
-    / "configs"
-    / "scpn_reactor_family_repository_map.json"
+MAP_RELATIVE = (
+    Path("agentic-shared") / "configs" / "scpn_reactor_family_repository_map.json"
+)
+MACHINE_MAP = next(
+    (
+        parent / MAP_RELATIVE
+        for parent in REPO.parents
+        if (parent / MAP_RELATIVE).is_file()
+    ),
+    REPO.parent.parent / MAP_RELATIVE,
 )
 
 

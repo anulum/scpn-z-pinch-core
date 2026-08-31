@@ -21,6 +21,7 @@ from preflight import (
     docs_gate,
     iter_markdown_files,
     main,
+    monorepo_map_path,
     run_command_gate,
     run_gates,
 )
@@ -132,12 +133,7 @@ def test_gate_plan_adds_map_cross_check_when_map_present() -> None:
     command = plan["reactor-domain"]
     assert command is not None
     map_flag_present = "--map" in command
-    expected = (
-        REPO.parent.parent
-        / "agentic-shared"
-        / "configs"
-        / "scpn_reactor_family_repository_map.json"
-    ).is_file()
+    expected = monorepo_map_path(REPO) is not None
     assert map_flag_present == expected
 
 

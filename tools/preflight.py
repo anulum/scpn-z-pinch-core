@@ -158,6 +158,27 @@ def docs_gate(root: Path) -> GateResult:
     return GateResult("docs", not findings, "; ".join(findings))
 
 
+def monorepo_map_path(root: Path) -> Path | None:
+    """Locate the shared reactor-family map above one repository root.
+
+    Parameters
+    ----------
+    root
+        Repository root to search upward from.
+
+    Returns
+    -------
+    Path or None
+        The first existing map file found walking the parent chain, or
+        ``None`` when no ancestor carries it.
+    """
+    for parent in root.resolve().parents:
+        candidate = parent / MAP_RELATIVE_TO_MONOREPO
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def build_gate_plan(root: Path) -> list[tuple[str, list[str] | None]]:
     """Build the ordered gate plan for one repository root.
 
@@ -175,8 +196,8 @@ def build_gate_plan(root: Path) -> list[tuple[str, list[str] | None]]:
     bin_dir = root / ".venv" / "bin"
     python = str(bin_dir / "python")
     validate = [python, "tools/validate_reactor_domain.py", "reactor-domain.json"]
-    map_path = root.parent.parent / MAP_RELATIVE_TO_MONOREPO
-    if map_path.is_file():
+    map_path = monorepo_map_path(root)
+    if map_path is not None:
         validate += ["--map", str(map_path)]
     return [
         ("ruff-check", [str(bin_dir / "ruff"), "check", "."]),
