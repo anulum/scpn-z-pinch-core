@@ -29,8 +29,10 @@ followed by the evidence record of each implemented capability.
 | Documentation | `python3 tools/preflight.py --only docs` | UTF-8 readability and relative-link integrity of every Markdown file |
 | Orchestrated | `python3 tools/preflight.py` | fail-closed run of all gates above |
 
-## Workflow gates (definitions present; run on the hosted platform once a
-remote exists under separate owner authority)
+## Workflow gates
+
+Definitions are present in-repository; they run on the hosted platform
+only once a remote exists under separate owner authority.
 
 | Workflow | Purpose |
 |---|---|
