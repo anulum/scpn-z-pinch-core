@@ -8,6 +8,11 @@ Contact: www.anulum.li | protoscience@anulum.li
 SCPN Z-Pinch Core — README
 -->
 
+<div align="center">
+  <img src="docs/assets/repo_header.png"
+       alt="SCPN Z-Pinch Core — The Current Is The Confinement">
+</div>
+
 # SCPN Z-Pinch Core
 
 Governed device-family repository for Z-pinch fusion systems within the
