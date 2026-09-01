@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from preflight import (
+    MAP_RELATIVE_TO_MONOREPO,
     build_gate_plan,
     check_docs,
     docs_gate,
@@ -135,6 +136,49 @@ def test_gate_plan_adds_map_cross_check_when_map_present() -> None:
     map_flag_present = "--map" in command
     expected = monorepo_map_path(REPO) is not None
     assert map_flag_present == expected
+
+
+def test_monorepo_map_path_finds_the_map_in_an_ancestor(tmp_path: Path) -> None:
+    """An ancestor carrying the machine map is found from any depth."""
+    monorepo = tmp_path / "monorepo"
+    map_file = monorepo / MAP_RELATIVE_TO_MONOREPO
+    map_file.parent.mkdir(parents=True)
+    map_file.write_text("{}", encoding="utf-8")
+    repository = monorepo / "03_CODE" / "GROUP" / "REPO"
+    repository.mkdir(parents=True)
+    assert monorepo_map_path(repository) == map_file
+
+
+def test_monorepo_map_path_is_none_in_a_standalone_checkout(tmp_path: Path) -> None:
+    """A checkout with no ancestor map reports absence rather than guessing."""
+    repository = tmp_path / "standalone" / "REPO"
+    repository.mkdir(parents=True)
+    assert monorepo_map_path(repository) is None
+
+
+def test_gate_plan_carries_map_flag_when_an_ancestor_map_exists(
+    tmp_path: Path,
+) -> None:
+    """The validator gate gains ``--map`` when the map is reachable."""
+    monorepo = tmp_path / "monorepo"
+    map_file = monorepo / MAP_RELATIVE_TO_MONOREPO
+    map_file.parent.mkdir(parents=True)
+    map_file.write_text("{}", encoding="utf-8")
+    repository = monorepo / "REPO"
+    repository.mkdir(parents=True)
+    command = dict(build_gate_plan(repository))["reactor-domain"]
+    assert command is not None
+    assert "--map" in command
+    assert str(map_file) in command
+
+
+def test_gate_plan_omits_map_flag_in_a_standalone_checkout(tmp_path: Path) -> None:
+    """Without a reachable map the validator gate carries no ``--map``."""
+    repository = tmp_path / "standalone" / "REPO"
+    repository.mkdir(parents=True)
+    command = dict(build_gate_plan(repository))["reactor-domain"]
+    assert command is not None
+    assert "--map" not in command
 
 
 def test_run_gates_only_docs_pass_and_fail(

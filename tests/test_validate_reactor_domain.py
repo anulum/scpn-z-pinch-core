@@ -341,6 +341,37 @@ def test_valid_contract_version_is_accepted(tmp_path: Path) -> None:
     assert validate_manifest(path, None) == []
 
 
+def test_map_cross_check_accepts_an_exactly_agreeing_map(tmp_path: Path) -> None:
+    """A map agreeing with the manifest yields no findings, without a monorepo.
+
+    The committed map lives outside a standalone checkout, so the agreement
+    path was previously exercised only inside the monorepo. This builds the
+    agreeing map from the manifest itself, so both the drift and the
+    no-drift edges execute in every environment.
+    """
+    manifest = load_json_object(MANIFEST)
+    project = manifest["project"]
+    registry = manifest["spo_registry"]
+    map_path = tmp_path / "agreeing-map.json"
+    map_path.write_text(
+        json.dumps(
+            {
+                "planned_repositories": [project],
+                "existing_repositories": [],
+                "configuration_assignments": dict.fromkeys(
+                    manifest["configurations"], project
+                ),
+                "source_registry": {
+                    "version": registry["version"],
+                    "digest_sha256": registry["digest_sha256"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert validate_manifest(MANIFEST, map_path) == []
+
+
 def test_map_cross_check_rejects_unreadable_map(tmp_path: Path) -> None:
     """A missing map file fails the cross-check instead of skipping it."""
     findings = validate_manifest(MANIFEST, tmp_path / "absent-map.json")
