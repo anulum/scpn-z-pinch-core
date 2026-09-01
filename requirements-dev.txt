@@ -11,7 +11,7 @@
 # architecture-only maturity.
 pre-commit==4.6.2
 ruff==0.15.9
-mypy==1.20.2
+mypy==2.3.1
 pytest==9.0.3
 pytest-cov==7.1.0
 coverage==7.13.5
