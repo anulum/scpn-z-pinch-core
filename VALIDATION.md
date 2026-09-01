@@ -169,3 +169,37 @@ canonical bytes is rejected). The envelope is `1.1.0`, adding
 `reactor-domain.json` — verified in tests against the committed file.
 All declarations remain synthetic; nothing here observes or controls
 anything.
+
+### Signal inventories, frame transformations, and clock topology
+
+The depth slice (envelope `1.2.0`; a `1.1.0` document is refused by the
+`1.2.0` codec and vice versa — no defaults, no cross-version coercion;
+`1.1.0` remains historical custody at the consumer) adds three typed
+declaration surfaces, every branch under the 100 % statement-and-branch
+gate:
+
+- A per-channel **signal inventory** (`SignalDeclaration`: identifier,
+  quantity, unit, role, description). Hard rules: non-empty, unique and
+  sorted; exactly one `carrier`; a `timing_marker` in `"s"` exactly for
+  event-relative channels and forbidden otherwise; numerical-only
+  channels declare a single `phase`/`rad` carrier. Quantity and unit are
+  declared tokens — no SI or UCUM validation is performed or claimed —
+  and no declaration creates or overrides a candidate, carrier,
+  observation, or phase: the candidate profile stays authoritative. An
+  advisory flags a multi-element cyclic array without an amplitude
+  signal.
+- **Frame transformations** (`FrameTransformation`): the frame kinds this
+  repository may declare admit no transformation pair, so the
+  transformation tuple must be empty and a second frame — which could
+  never be connected — is refused. The model, its admissibility table
+  and its declaration-only semantics (`evidence_claimed` always `False`)
+  are shared with the portfolio.
+- A **clock topology** (`ClockDomain`, `ClockTopology`): every physical
+  clock in exactly one domain, the simulation clock in none; a domain
+  holding a facility clock is rooted there, otherwise at its shot-event
+  epoch; every non-root member declares a relation to its root; every
+  non-reference root declares a relation to the reference root (star);
+  relations must not form a cycle. The reference plan declares one
+  domain (`clk_facility` root, `clk_shot` member); multi-domain rules
+  are exercised by test-constructed plans. Scopes are declarations;
+  `mapping_state` stays `unmapped`.

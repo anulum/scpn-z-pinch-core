@@ -94,12 +94,46 @@ class ClockKind(StrEnum):
     SIMULATION = "simulation"
 
 
+class SignalRole(StrEnum):
+    """Role one declared signal plays inside a channel's inventory."""
+
+    CARRIER = "carrier"
+    TIMING_MARKER = "timing_marker"
+    AMPLITUDE = "amplitude"
+    AUXILIARY = "auxiliary"
+
+
+class TransformationKind(StrEnum):
+    """Kind of a declared mapping between two declared reference frames."""
+
+    RIGID = "rigid"
+    FLUX_MAPPING = "flux_mapping"
+    PROJECTION = "projection"
+
+
 ALLOWED_FRAME_KINDS: Final = frozenset(
     {
         FrameKind.MACHINE_CYLINDRICAL,
     }
 )
 
+_ADMISSIBLE_TRANSFORMATIONS: Final[dict[frozenset[FrameKind], TransformationKind]] = {
+    frozenset({FrameKind.MACHINE_CYLINDRICAL, FrameKind.FLUX_SURFACE}): (
+        TransformationKind.FLUX_MAPPING
+    ),
+    frozenset(
+        {FrameKind.FLUX_SURFACE, FrameKind.BOOZER}
+    ): TransformationKind.FLUX_MAPPING,
+    frozenset({FrameKind.FIELD_LINE, FrameKind.MACHINE_CYLINDRICAL}): (
+        TransformationKind.FLUX_MAPPING
+    ),
+    frozenset({FrameKind.BLANKET_ZONE, FrameKind.MACHINE_CYLINDRICAL}): (
+        TransformationKind.PROJECTION
+    ),
+    frozenset(
+        {FrameKind.CHAMBER_CARTESIAN, FrameKind.BEAMLINE}
+    ): TransformationKind.RIGID,
+}
 _ADMISSIBLE_CARRIERS: Final[dict[ObservabilityClass, frozenset[SemanticCarrier]]] = {
     ObservabilityClass.DERIVED_CYCLIC: frozenset(
         {
@@ -447,6 +481,241 @@ class ClockRelation:
 
 
 @dataclass(frozen=True, slots=True)
+class SignalDeclaration:
+    """One declared signal inside a channel's inventory.
+
+    A signal declaration names WHAT a channel would carry; it is a
+    declaration only. The quantity and unit tokens are declared strings —
+    no SI or UCUM validation is performed or claimed — and no declaration
+    creates or overrides a candidate, carrier, observation, or phase: the
+    candidate profile remains authoritative.
+
+    Parameters
+    ----------
+    identifier
+        Channel-local signal identifier.
+    quantity
+        Declared physical quantity name; non-empty.
+    unit
+        Declared unit token; non-empty, no whitespace.
+    role
+        Role of the signal inside the channel inventory.
+    description
+        Statement of what the signal would carry; non-empty.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If any component violates the model.
+    """
+
+    identifier: str
+    quantity: str
+    unit: str
+    role: SignalRole
+    description: str
+
+    def __post_init__(self) -> None:
+        """Validate the signal declaration.
+
+        Raises
+        ------
+        DiagnosticPlanError
+            If any component violates the model.
+        """
+        if IDENTIFIER.fullmatch(self.identifier) is None:
+            raise DiagnosticPlanError(
+                f"signal.identifier: malformed identifier {self.identifier!r}"
+            )
+        if not self.quantity:
+            raise DiagnosticPlanError("signal.quantity: must be non-empty")
+        if not self.unit or any(character.isspace() for character in self.unit):
+            raise DiagnosticPlanError(
+                "signal.unit: must be a non-empty token without whitespace, "
+                f"got {self.unit!r}"
+            )
+        if not self.description:
+            raise DiagnosticPlanError("signal.description: must be non-empty")
+
+
+@dataclass(frozen=True, slots=True)
+class FrameTransformation:
+    """One declared mapping between two declared reference frames.
+
+    A transformation declares HOW coordinates in the source frame would be
+    expressed in the target frame; the method is a declaration and no
+    metrological evidence is claimed.
+
+    Parameters
+    ----------
+    source_identifier
+        Declared frame the mapping starts from.
+    target_identifier
+        Declared frame the mapping lands in.
+    kind
+        Mapping kind; must be admissible for the two frame kinds.
+    equilibrium_dependent
+        Must be ``True`` exactly for ``flux_mapping`` (the mapping depends
+        on an equilibrium reconstruction) and ``False`` otherwise.
+    method
+        Statement of HOW the mapping would be established; non-empty.
+    evidence_claimed
+        Must be ``False``: no mapping evidence exists or is claimed.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If any component violates the model.
+    """
+
+    source_identifier: str
+    target_identifier: str
+    kind: TransformationKind
+    equilibrium_dependent: bool
+    method: str
+    evidence_claimed: bool
+
+    def __post_init__(self) -> None:
+        """Validate the transformation declaration.
+
+        Raises
+        ------
+        DiagnosticPlanError
+            If any component violates the model.
+        """
+        for field, value in (
+            ("source_identifier", self.source_identifier),
+            ("target_identifier", self.target_identifier),
+        ):
+            if IDENTIFIER.fullmatch(value) is None:
+                raise DiagnosticPlanError(
+                    f"transformation.{field}: malformed identifier {value!r}"
+                )
+        if self.source_identifier == self.target_identifier:
+            raise DiagnosticPlanError(
+                "transformation: a frame cannot be transformed to itself"
+            )
+        expected_dependency = self.kind is TransformationKind.FLUX_MAPPING
+        if self.equilibrium_dependent is not expected_dependency:
+            raise DiagnosticPlanError(
+                "transformation.equilibrium_dependent: must be "
+                f"{expected_dependency!r} for kind {self.kind.value!r}"
+            )
+        if not self.method:
+            raise DiagnosticPlanError("transformation.method: must be non-empty")
+        if self.evidence_claimed is not False:
+            raise DiagnosticPlanError(
+                "transformation.evidence_claimed: must be False; no mapping "
+                "evidence exists or is claimed"
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class ClockDomain:
+    """One declared clock domain: a root clock and the clocks bound to it.
+
+    Parameters
+    ----------
+    identifier
+        Plan-local domain identifier.
+    root_clock_identifier
+        Declared clock the domain is referenced to; must be a member.
+    member_clock_identifiers
+        Declared clocks in the domain; unique, sorted, non-empty.
+    scope
+        Statement of the facility subsystem the domain represents; a
+        declaration only.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If any component violates the model.
+    """
+
+    identifier: str
+    root_clock_identifier: str
+    member_clock_identifiers: tuple[str, ...]
+    scope: str
+
+    def __post_init__(self) -> None:
+        """Validate the domain declaration.
+
+        Raises
+        ------
+        DiagnosticPlanError
+            If any component violates the model.
+        """
+        if IDENTIFIER.fullmatch(self.identifier) is None:
+            raise DiagnosticPlanError(
+                f"domain.identifier: malformed identifier {self.identifier!r}"
+            )
+        if IDENTIFIER.fullmatch(self.root_clock_identifier) is None:
+            raise DiagnosticPlanError(
+                "domain.root_clock_identifier: malformed identifier "
+                f"{self.root_clock_identifier!r}"
+            )
+        if not self.member_clock_identifiers:
+            raise DiagnosticPlanError(
+                "domain.member_clock_identifiers: must list at least one clock"
+            )
+        if (
+            tuple(sorted(set(self.member_clock_identifiers)))
+            != self.member_clock_identifiers
+        ):
+            raise DiagnosticPlanError(
+                "domain.member_clock_identifiers: must be unique and sorted"
+            )
+        if self.root_clock_identifier not in self.member_clock_identifiers:
+            raise DiagnosticPlanError(
+                "domain.root_clock_identifier: the root must be a member"
+            )
+        if not self.scope:
+            raise DiagnosticPlanError("domain.scope: must be non-empty")
+
+
+@dataclass(frozen=True, slots=True)
+class ClockTopology:
+    """Declared partition of the physical clocks into domains.
+
+    Parameters
+    ----------
+    domains
+        Declared domains, sorted by identifier; at least one.
+    reference_domain_identifier
+        Domain whose root is the plan's timing reference; must be declared.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If any component violates the model.
+    """
+
+    domains: tuple[ClockDomain, ...]
+    reference_domain_identifier: str
+
+    def __post_init__(self) -> None:
+        """Validate the topology declaration.
+
+        Raises
+        ------
+        DiagnosticPlanError
+            If any component violates the model.
+        """
+        if not self.domains:
+            raise DiagnosticPlanError(
+                "topology.domains: must declare at least one domain"
+            )
+        domain_ids = tuple(domain.identifier for domain in self.domains)
+        if tuple(sorted(set(domain_ids))) != domain_ids:
+            raise DiagnosticPlanError("topology.domains: must be unique and sorted")
+        if self.reference_domain_identifier not in domain_ids:
+            raise DiagnosticPlanError(
+                "topology.reference_domain_identifier: "
+                f"{self.reference_domain_identifier!r} is not a declared domain"
+            )
+
+
+@dataclass(frozen=True, slots=True)
 class ClockModel:
     """One declared clock identity.
 
@@ -536,6 +805,12 @@ class DiagnosticChannelPlan:
     evidence_bindings
         Statement per evidence slot of HOW the slot would be bound; keys
         must exactly equal the candidate's class-fixed vocabulary.
+    signals
+        Declared signal inventory of the channel; non-empty, unique and
+        sorted by identifier, exactly one ``carrier`` signal, a
+        ``timing_marker`` (unit ``"s"``) exactly for event-relative
+        channels, and a single ``phase``/``rad`` carrier for
+        numerical-only channels.
     synthetic
         Must be ``True``; no channel in this repository describes a real
         diagnostic.
@@ -557,6 +832,7 @@ class DiagnosticChannelPlan:
     acquisition_duration_s: float
     element_count: int
     evidence_bindings: dict[str, str]
+    signals: tuple[SignalDeclaration, ...]
     synthetic: bool
 
     def __post_init__(self) -> None:
@@ -671,10 +947,67 @@ class DiagnosticChannelPlan:
                 f"channel.evidence_bindings[{clock_key!r}]: must reference the "
                 f"bound clock {self.clock_identifier!r}"
             )
+        self._validate_signals(observability_class)
         if self.synthetic is not True:
             raise DiagnosticPlanError(
                 "channel.synthetic: every channel in this repository is "
                 "synthetic; no real diagnostic is described"
+            )
+
+    def _validate_signals(self, observability_class: ObservabilityClass) -> None:
+        """Validate the signal inventory against the channel's class.
+
+        Parameters
+        ----------
+        observability_class
+            Class of the addressed candidate.
+
+        Raises
+        ------
+        DiagnosticPlanError
+            If the inventory violates the model.
+        """
+        if not self.signals:
+            raise DiagnosticPlanError(
+                "channel.signals: must declare at least one signal"
+            )
+        signal_ids = tuple(signal.identifier for signal in self.signals)
+        if tuple(sorted(set(signal_ids))) != signal_ids:
+            raise DiagnosticPlanError("channel.signals: must be unique and sorted")
+        carriers = [
+            signal for signal in self.signals if signal.role is SignalRole.CARRIER
+        ]
+        if len(carriers) != 1:
+            raise DiagnosticPlanError(
+                "channel.signals: exactly one carrier signal is required, "
+                f"got {len(carriers)}"
+            )
+        markers = [
+            signal for signal in self.signals if signal.role is SignalRole.TIMING_MARKER
+        ]
+        if observability_class is ObservabilityClass.EVENT_RELATIVE:
+            if len(markers) != 1:
+                raise DiagnosticPlanError(
+                    "channel.signals: event-relative channels declare exactly one "
+                    f"timing_marker signal, got {len(markers)}"
+                )
+            if markers[0].unit != "s":
+                raise DiagnosticPlanError(
+                    "channel.signals: the timing_marker signal must be declared in "
+                    f"seconds ('s'), got {markers[0].unit!r}"
+                )
+        elif markers:
+            raise DiagnosticPlanError(
+                "channel.signals: only event-relative channels declare a timing_marker"
+            )
+        if observability_class is ObservabilityClass.NUMERICAL_ONLY and (
+            len(self.signals) != 1
+            or carriers[0].quantity != "phase"
+            or carriers[0].unit != "rad"
+        ):
+            raise DiagnosticPlanError(
+                "channel.signals: numerical-only channels declare exactly one "
+                "carrier signal of quantity 'phase' in 'rad'"
             )
 
     @property
@@ -748,6 +1081,12 @@ class DiagnosticPlan:
     clock_relations
         Declared clock synchronisation bounds, sorted by child then
         parent identifier.
+    frame_transformations
+        Declared mappings between declared frames, sorted by source then
+        target identifier; at most one per frame pair; when two or more
+        frames are declared the mappings must connect all of them.
+    clock_topology
+        Declared partition of the non-simulation clocks into domains.
 
     Raises
     ------
@@ -762,6 +1101,8 @@ class DiagnosticPlan:
     deferrals: tuple[DeferredCandidate, ...]
     frames: tuple[ReferenceFrame, ...]
     clock_relations: tuple[ClockRelation, ...]
+    frame_transformations: tuple[FrameTransformation, ...]
+    clock_topology: ClockTopology
 
     def __post_init__(self) -> None:
         """Validate cross-object invariants of the plan.
@@ -859,6 +1200,10 @@ class DiagnosticPlan:
                         f"{clock.identifier!r} must declare a bound against "
                         "a facility clock"
                     )
+        self._validate_transformations(
+            {frame.identifier: frame for frame in self.frames}
+        )
+        self._validate_topology({clock.identifier: clock for clock in self.clocks})
         planned = {channel.candidate_id for channel in self.channels}
         deferred = set(deferral_ids)
         overlap = sorted(planned & deferred)
@@ -875,6 +1220,134 @@ class DiagnosticPlan:
                 "plan: applicable candidates must be planned or explicitly "
                 f"deferred; missing={missing!r}, unknown={unknown!r}"
             )
+
+    def _validate_transformations(
+        self, frames_by_id: dict[str, ReferenceFrame]
+    ) -> None:
+        """Validate the declared frame transformations.
+
+        Parameters
+        ----------
+        frames_by_id
+            Declared frames keyed by identifier.
+
+        Raises
+        ------
+        DiagnosticPlanError
+            If any transformation invariant is violated.
+        """
+        if self.frame_transformations:
+            raise DiagnosticPlanError(
+                "plan.frame_transformations: no admissible transformation exists "
+                "between the frame kinds this repository may declare"
+            )
+        if len(frames_by_id) > 1:
+            raise DiagnosticPlanError(
+                "plan.frames: a second frame cannot be connected in this repository"
+            )
+
+    def _validate_topology(self, clocks_by_id: dict[str, ClockModel]) -> None:
+        """Validate the declared clock topology against clocks and relations.
+
+        Parameters
+        ----------
+        clocks_by_id
+            Declared clocks keyed by identifier.
+
+        Raises
+        ------
+        DiagnosticPlanError
+            If any topology invariant is violated.
+        """
+        topology = self.clock_topology
+        membership: dict[str, str] = {}
+        for domain in topology.domains:
+            for member in domain.member_clock_identifiers:
+                clock = clocks_by_id.get(member)
+                if clock is None:
+                    raise DiagnosticPlanError(
+                        f"plan.clock_topology: clock {member!r} is not declared"
+                    )
+                if clock.kind is ClockKind.SIMULATION:
+                    raise DiagnosticPlanError(
+                        "plan.clock_topology: the simulation clock keeps model time "
+                        "and belongs to no physical domain"
+                    )
+                if member in membership:
+                    raise DiagnosticPlanError(
+                        f"plan.clock_topology: clock {member!r} belongs to more than "
+                        "one domain"
+                    )
+                membership[member] = domain.identifier
+            root = clocks_by_id[domain.root_clock_identifier]
+            has_facility = any(
+                clocks_by_id[member].kind is ClockKind.FACILITY_MONOTONIC
+                for member in domain.member_clock_identifiers
+            )
+            expected_kind = (
+                ClockKind.FACILITY_MONOTONIC
+                if has_facility
+                else ClockKind.SHOT_EVENT_EPOCH
+            )
+            if root.kind is not expected_kind:
+                raise DiagnosticPlanError(
+                    f"plan.clock_topology: domain {domain.identifier!r} root must be "
+                    f"of kind {expected_kind.value!r}, got {root.kind.value!r}"
+                )
+        unassigned = sorted(
+            identifier
+            for identifier, clock in clocks_by_id.items()
+            if clock.kind is not ClockKind.SIMULATION and identifier not in membership
+        )
+        if unassigned:
+            raise DiagnosticPlanError(
+                f"plan.clock_topology: clocks {unassigned!r} belong to no domain"
+            )
+        parents: dict[str, set[str]] = {}
+        for relation in self.clock_relations:
+            parents.setdefault(relation.child_identifier, set()).add(
+                relation.parent_identifier
+            )
+        reference_root = next(
+            domain.root_clock_identifier
+            for domain in topology.domains
+            if domain.identifier == topology.reference_domain_identifier
+        )
+        for domain in topology.domains:
+            for member in domain.member_clock_identifiers:
+                if member != domain.root_clock_identifier and (
+                    domain.root_clock_identifier not in parents.get(member, set())
+                ):
+                    raise DiagnosticPlanError(
+                        f"plan.clock_topology: clock {member!r} must declare a "
+                        f"relation to its domain root {domain.root_clock_identifier!r}"
+                    )
+            if domain.identifier != topology.reference_domain_identifier:
+                cross = parents.get(domain.root_clock_identifier, set())
+                if reference_root not in cross:
+                    raise DiagnosticPlanError(
+                        "plan.clock_topology: domain root "
+                        f"{domain.root_clock_identifier!r} must declare a relation "
+                        f"to the reference root {reference_root!r}"
+                    )
+        visiting: set[str] = set()
+        finished: set[str] = set()
+
+        def _visit(identifier: str) -> None:
+            if identifier in finished:
+                return
+            if identifier in visiting:
+                raise DiagnosticPlanError(
+                    "plan.clock_relations: relations must not form a cycle"
+                )
+            visiting.add(identifier)
+            for parent in sorted(parents.get(identifier, set())):
+                _visit(parent)
+            visiting.discard(identifier)
+            finished.add(identifier)
+
+        for identifier in sorted(clocks_by_id):
+            _visit(identifier)
 
     def consistency_report(self) -> tuple[ConsistencyFinding, ...]:
         """Report device-typical band findings without failing.
@@ -949,6 +1422,22 @@ class DiagnosticPlan:
                         ),
                     )
                 )
+            if (
+                channel.observability_class is ObservabilityClass.DERIVED_CYCLIC
+                and channel.element_count > 1
+                and not any(
+                    signal.role is SignalRole.AMPLITUDE for signal in channel.signals
+                )
+            ):
+                findings.append(
+                    ConsistencyFinding(
+                        field=f"channels[{channel.identifier}].signals",
+                        message=(
+                            "a multi-element cyclic array declares no amplitude "
+                            "signal in its inventory"
+                        ),
+                    )
+                )
             clock = clocks_by_id[channel.clock_identifier]
             if clock.resolution_s > 1.0 / channel.sample_rate_hz:
                 findings.append(
@@ -1007,6 +1496,16 @@ class DiagnosticPlan:
                     "evidence_bindings": dict(
                         sorted(channel.evidence_bindings.items())
                     ),
+                    "signals": [
+                        {
+                            "identifier": signal.identifier,
+                            "quantity": signal.quantity,
+                            "unit": signal.unit,
+                            "role": signal.role.value,
+                            "description": signal.description,
+                        }
+                        for signal in channel.signals
+                    ],
                     "synthetic": channel.synthetic,
                 }
                 for channel in self.channels
@@ -1038,6 +1537,33 @@ class DiagnosticPlan:
                 }
                 for relation in self.clock_relations
             ],
+            "frame_transformations": [
+                {
+                    "source_identifier": transformation.source_identifier,
+                    "target_identifier": transformation.target_identifier,
+                    "kind": transformation.kind.value,
+                    "equilibrium_dependent": transformation.equilibrium_dependent,
+                    "method": transformation.method,
+                    "evidence_claimed": transformation.evidence_claimed,
+                }
+                for transformation in self.frame_transformations
+            ],
+            "clock_topology": {
+                "domains": [
+                    {
+                        "identifier": domain.identifier,
+                        "root_clock_identifier": domain.root_clock_identifier,
+                        "member_clock_identifiers": list(
+                            domain.member_clock_identifiers
+                        ),
+                        "scope": domain.scope,
+                    }
+                    for domain in self.clock_topology.domains
+                ],
+                "reference_domain_identifier": (
+                    self.clock_topology.reference_domain_identifier
+                ),
+            },
         }
 
     def canonical_bytes(self) -> bytes:
@@ -1289,6 +1815,72 @@ def _evidence_bindings(record: dict[str, Any]) -> dict[str, str]:
     return result
 
 
+def _string_tuple(record: dict[str, Any], field: str) -> tuple[str, ...]:
+    """Return one required string-array field of a record.
+
+    Parameters
+    ----------
+    record
+        Mapping under inspection.
+    field
+        Key that must hold an array of strings.
+
+    Returns
+    -------
+    tuple of str
+        The array entries.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If the field is missing, not an array, or holds non-strings.
+    """
+    value = record.get(field)
+    if not isinstance(value, list):
+        raise DiagnosticPlanError(f"{field}: must be an array")
+    for entry in value:
+        if not isinstance(entry, str):
+            raise DiagnosticPlanError(
+                f"{field}: entries must be strings, got {entry!r}"
+            )
+    return tuple(value)
+
+
+def _signals(record: dict[str, Any]) -> tuple[SignalDeclaration, ...]:
+    """Return the signal inventory of a channel record.
+
+    Parameters
+    ----------
+    record
+        Channel record under inspection.
+
+    Returns
+    -------
+    tuple of SignalDeclaration
+        Declared signals in document order.
+
+    Raises
+    ------
+    DiagnosticPlanError
+        If the inventory shape is violated.
+    """
+    signals = []
+    for entry in _require_list(record, "signals"):
+        if not isinstance(entry, dict):
+            raise DiagnosticPlanError("signals[]: must be an object")
+        _exact_entry_keys(entry, _SIGNAL_KEYS, "signals[]")
+        signals.append(
+            SignalDeclaration(
+                identifier=_string(entry, "identifier"),
+                quantity=_string(entry, "quantity"),
+                unit=_string(entry, "unit"),
+                role=_enum_value(entry, "role", SignalRole),
+                description=_string(entry, "description"),
+            )
+        )
+    return tuple(signals)
+
+
 def _integer(record: dict[str, Any], field: str) -> int:
     """Return one required integer field of a record.
 
@@ -1381,6 +1973,7 @@ _CHANNEL_KEYS: Final = frozenset(
         "acquisition_duration_s",
         "element_count",
         "evidence_bindings",
+        "signals",
         "synthetic",
     }
 )
@@ -1397,6 +1990,23 @@ _RELATION_KEYS: Final = frozenset(
         "evidence_claimed",
     }
 )
+_SIGNAL_KEYS: Final = frozenset(
+    {"identifier", "quantity", "unit", "role", "description"}
+)
+_TRANSFORMATION_KEYS: Final = frozenset(
+    {
+        "source_identifier",
+        "target_identifier",
+        "kind",
+        "equilibrium_dependent",
+        "method",
+        "evidence_claimed",
+    }
+)
+_DOMAIN_KEYS: Final = frozenset(
+    {"identifier", "root_clock_identifier", "member_clock_identifiers", "scope"}
+)
+_TOPOLOGY_KEYS: Final = frozenset({"domains", "reference_domain_identifier"})
 
 
 def plan_from_record(record: Any) -> DiagnosticPlan:
@@ -1428,6 +2038,8 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
         "deferrals",
         "frames",
         "clock_relations",
+        "frame_transformations",
+        "clock_topology",
     }
     unknown = sorted(set(record) - known)
     if unknown:
@@ -1465,6 +2077,7 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
                 acquisition_duration_s=_number(entry, "acquisition_duration_s"),
                 element_count=_integer(entry, "element_count"),
                 evidence_bindings=_evidence_bindings(entry),
+                signals=_signals(entry),
                 synthetic=_boolean(entry, "synthetic"),
             )
         )
@@ -1507,6 +2120,44 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
                 evidence_claimed=_boolean(entry, "evidence_claimed"),
             )
         )
+    transformations = []
+    for entry in _require_list(record, "frame_transformations"):
+        if not isinstance(entry, dict):
+            raise DiagnosticPlanError("frame_transformations[]: must be an object")
+        _exact_entry_keys(entry, _TRANSFORMATION_KEYS, "frame_transformations[]")
+        transformations.append(
+            FrameTransformation(
+                source_identifier=_string(entry, "source_identifier"),
+                target_identifier=_string(entry, "target_identifier"),
+                kind=_enum_value(entry, "kind", TransformationKind),
+                equilibrium_dependent=_boolean(entry, "equilibrium_dependent"),
+                method=_string(entry, "method"),
+                evidence_claimed=_boolean(entry, "evidence_claimed"),
+            )
+        )
+    topology_record = _require_mapping(record, "clock_topology")
+    _exact_entry_keys(topology_record, _TOPOLOGY_KEYS, "clock_topology")
+    domains = []
+    for entry in _require_list(topology_record, "domains"):
+        if not isinstance(entry, dict):
+            raise DiagnosticPlanError("clock_topology.domains[]: must be an object")
+        _exact_entry_keys(entry, _DOMAIN_KEYS, "clock_topology.domains[]")
+        domains.append(
+            ClockDomain(
+                identifier=_string(entry, "identifier"),
+                root_clock_identifier=_string(entry, "root_clock_identifier"),
+                member_clock_identifiers=_string_tuple(
+                    entry, "member_clock_identifiers"
+                ),
+                scope=_string(entry, "scope"),
+            )
+        )
+    topology = ClockTopology(
+        domains=tuple(domains),
+        reference_domain_identifier=_string(
+            topology_record, "reference_domain_identifier"
+        ),
+    )
     return DiagnosticPlan(
         identifier=_string(record, "identifier"),
         binding=ObservabilityBinding(
@@ -1522,6 +2173,8 @@ def plan_from_record(record: Any) -> DiagnosticPlan:
         deferrals=tuple(deferrals),
         frames=tuple(frames),
         clock_relations=tuple(relations),
+        frame_transformations=tuple(transformations),
+        clock_topology=topology,
     )
 
 

@@ -42,7 +42,7 @@ from scpn_z_pinch_core.plan_envelope import (
 )
 
 FIXTURE = Path(__file__).parent / "data" / "plan_envelope_fixture.json"
-FIXTURE_SHA256 = "69a068ded2d3db9b9c64080547cedd204893637996b9fab91638ba3491b940a0"
+FIXTURE_SHA256 = "cfe64254564245f064bada4ca91dbc1debf11e6d75e29b2cbe073492207c89a1"
 
 
 def fixture_document() -> dict[str, Any]:
@@ -132,6 +132,7 @@ def test_builder_rejects_empty_revision() -> None:
         ("schema", "scpn.other.v1", r"envelope\.schema"),
         ("schema_version", "9.9.9", "schema_version"),
         ("schema_version", "1.0.0", "schema_version"),
+        ("schema_version", "1.1.0", "schema_version"),
         ("project", "SCPN-OTHER-CORE", r"envelope\.project"),
         ("configurations", ("conventional_tokamak",), "owned set"),
         ("capability", "device_configuration_model", r"envelope\.capability"),
@@ -254,7 +255,7 @@ def test_bytes_parser_rejects_invalid_utf8() -> None:
 def test_constants_are_the_published_contract() -> None:
     """The public constants state the exchanged contract exactly."""
     assert ENVELOPE_SCHEMA == "scpn.reactor-diagnostic-plan-envelope.v1"
-    assert ENVELOPE_SCHEMA_VERSION == "1.1.0"
+    assert ENVELOPE_SCHEMA_VERSION == "1.2.0"
     assert PROJECT == "SCPN-Z-PINCH-CORE"
     assert NON_CLAIMS == (
         "no control action is proposed or authorised",
