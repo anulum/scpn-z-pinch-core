@@ -14,6 +14,13 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Added
 
+- Local gate parity with the wider ecosystem: the pre-commit chain now
+  also runs REUSE licensing compliance and a typographical checker
+  (`_typos.toml` carries the deliberate reactor vocabulary), and adds
+  the upstream YAML, TOML, large-file and private-key guards. Licensing
+  and spelling were previously verified only in hosted CI, so a broken
+  REUSE annotation — including the aggregate annotation that covers the
+  binary header images — could reach a push before being caught.
 - Generated repository header artwork: `docs/assets/generate_header.py`
   renders three deterministic 1280x640 images from the repository's own
   domain surface (the pinch column used by the README, the
