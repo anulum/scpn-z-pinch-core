@@ -14,12 +14,16 @@ SCPN Z-Pinch Core — Architecture
 
 `SCPN-Z-PINCH-CORE` is the device-family owner for Z-pinch systems in the
 SCPN Reactor Systems Research Group portfolio. The
-repository owns two implemented capabilities at
+repository owns three implemented capabilities at
 `computational_prototype` in `src/scpn_z_pinch_core/`: the device
 configuration model (design record ADR 0002, evidence record
-`VALIDATION.md#device-configuration-model`) and the diagnostic and
+`VALIDATION.md#device-configuration-model`), the diagnostic and
 clock semantics model (design record ADR 0003, evidence record
-`VALIDATION.md#diagnostic-and-clock-semantics`). Every other
+`VALIDATION.md#diagnostic-and-clock-semantics`) and the level-0
+device physics (design record ADR 0005, evidence record
+`VALIDATION.md#level-0-device-physics`; owned domain
+`analytic_device_physics_models`, disjoint from solver mathematics).
+Every other
 section below describes boundaries and contracts. The claim inventory is
 empty; capability and claim inventories are generated and drift-checked.
 
@@ -82,12 +86,15 @@ SCPN-CONTROL ──admitted ControlAction──► independent machine protectio
 |---|---|
 | `reactor-domain.json` | portable source of project identity and contracts |
 | `studio/portfolio-descriptor.json` | derived Studio descriptor, `not_federated` |
-| `capability-inventory.json` | generated, truthfully empty inventory |
+| `capability-inventory.json` | generated inventory of the three implemented capabilities |
+| `src/scpn_z_pinch_core/physics/` | level-0 device physics (four cited closed-form models, composed record) |
+| `rust/` | optional native kernels (`scpn-z-pinch-rs`), bit-exact with the Python floor |
+| `benchmarks/` | standard-conformant benchmark and committed local artefact |
 | `docs/CONTROL_ADAPTER_SPECIFICATION.md` | device-owned adapter contract |
 | `docs/THREAT_MODEL.md` | assets, trust boundaries, misuse paths |
 | `docs/adr/0001-repository-boundary.md` | boundary decision record |
 | `tools/` | validators, derivation tools, preflight orchestrator |
-| `tests/` | statement- and branch-complete tests for `tools/` |
+| `tests/` | statement- and branch-complete tests for `src/` and `tools/`, native parity tests |
 | `.github/workflows/` | read-only CI definitions (no publication) |
 
 ## Contract surfaces and versioning

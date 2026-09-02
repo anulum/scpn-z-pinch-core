@@ -65,7 +65,7 @@ repos:
         types: [python]
       - id: mypy-strict
         name: mypy strict
-        entry: .venv/bin/mypy --strict src tools tests
+        entry: .venv/bin/mypy --strict src tools tests benchmarks
         language: system
         pass_filenames: false
         types: [python]

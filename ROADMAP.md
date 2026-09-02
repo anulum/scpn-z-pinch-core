@@ -40,6 +40,17 @@ this repository until it appears in the capability inventory with evidence.
   (current/voltage event train, pinch-mode probe array, synthetic oscillator); `computational_prototype` (ADR 0003,
   `VALIDATION.md#diagnostic-and-clock-semantics`). No ingress is
   declared; the SPO semantic-profile state remains `not_declared`.
+- **Level-0 device physics** (landed 2026-09-02) — four cited
+  closed-form models evaluated on the validated configuration (Bennett
+  equilibrium and profiles, ideal-MHD growth estimates with the
+  Kadomtsev m=0 criterion, the Shumlak-Hartman sheared-flow criterion,
+  the Pease-Braginskii current), a canonical `Level0PhysicsRecord`,
+  optional native kernels bit-exact with the Python floor, and a
+  standard-conformant benchmark; `computational_prototype` (ADR 0005,
+  `VALIDATION.md#level-0-device-physics`). Follow-ups under the same
+  capability: parameter-grid scans as the first compute hot path (which
+  opens the multi-language chain with measured benchmarks per backend),
+  and D-D reactivity under its own acceptance contract.
 
 ## Planned (no implementation exists; ordering is not a commitment)
 1. **Safety-envelope declaration** — machine-readable operational envelope

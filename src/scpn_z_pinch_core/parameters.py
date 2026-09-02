@@ -81,6 +81,32 @@ def require_positive(name: str, value: float) -> float:
     return value
 
 
+def require_non_negative(name: str, value: float) -> float:
+    """Return ``value`` when finite and non-negative.
+
+    Parameters
+    ----------
+    name
+        Field name reported in the rejection message.
+    value
+        Value under validation.
+
+    Returns
+    -------
+    float
+        The validated value.
+
+    Raises
+    ------
+    DeviceConfigurationError
+        If ``value`` is non-finite or negative.
+    """
+    require_finite(name, value)
+    if value < 0.0:
+        raise DeviceConfigurationError(f"{name}: must be non-negative, got {value!r}")
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class PinchColumn:
     """Pinch-column geometry parameters.

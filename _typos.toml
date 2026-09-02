@@ -15,6 +15,9 @@
 mis = "mis"
 # Accepted alternative spelling used in the threat model prose.
 unparseable = "unparseable"
+# Surname in the Pease-Braginskii current (Pease 1957).
+pease = "pease"
+Pease = "Pease"
 
 [files]
 extend-exclude = [

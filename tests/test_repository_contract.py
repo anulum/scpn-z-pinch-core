@@ -56,6 +56,25 @@ REQUIRED_PATHS = (
     "conftest.py",
     "docs/adr/0002-device-configuration-model.md",
     "docs/adr/0003-diagnostic-clock-semantics.md",
+    "docs/adr/0004-signal-frame-clock-depth.md",
+    "docs/adr/0005-level0-device-physics.md",
+    "docs/benchmarks.md",
+    "benchmarks/level0_physics.py",
+    "benchmarks/results/level0_physics.local.json",
+    "rust/Cargo.toml",
+    "rust/Cargo.lock",
+    "rust/pyproject.toml",
+    "rust/src/lib.rs",
+    "rust/src/bennett.rs",
+    "rust/src/stability.rs",
+    "rust/src/sheared_flow.rs",
+    "rust/src/pease_braginskii.rs",
+    "src/scpn_z_pinch_core/physics/__init__.py",
+    "src/scpn_z_pinch_core/physics/bennett.py",
+    "src/scpn_z_pinch_core/physics/stability.py",
+    "src/scpn_z_pinch_core/physics/sheared_flow.py",
+    "src/scpn_z_pinch_core/physics/pease_braginskii.py",
+    "src/scpn_z_pinch_core/physics/level0.py",
     "reactor-domain.json",
     "requirements-dev.txt",
     "src/scpn_z_pinch_core/__init__.py",
@@ -137,7 +156,13 @@ def test_manifest_declares_exact_configuration_assignment() -> None:
             "evidence_maturity": "computational_prototype",
             "evidence_pointer": "VALIDATION.md#diagnostic-and-clock-semantics",
         },
+        {
+            "identifier": "level0_device_physics",
+            "evidence_maturity": "computational_prototype",
+            "evidence_pointer": "VALIDATION.md#level-0-device-physics",
+        },
     ]
+    assert "analytic_device_physics_models" in manifest["owned_domains"]
     assert manifest["claims"] == []
 
 
@@ -151,7 +176,7 @@ def test_descriptor_and_inventory_embed_current_manifest_digest() -> None:
     assert descriptor["source"]["manifest_sha256"] == digest
     assert inventory["source"]["manifest_sha256"] == digest
     assert descriptor["lifecycle"]["state"] == "not_federated"
-    assert inventory["implemented_capability_count"] == 2
+    assert inventory["implemented_capability_count"] == 3
 
 
 def test_no_agent_state_trees_exist() -> None:

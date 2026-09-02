@@ -9,16 +9,21 @@
       "evidence_maturity": "computational_prototype",
       "evidence_pointer": "VALIDATION.md#diagnostic-and-clock-semantics",
       "identifier": "diagnostic_clock_semantics"
+    },
+    {
+      "evidence_maturity": "computational_prototype",
+      "evidence_pointer": "VALIDATION.md#level-0-device-physics",
+      "identifier": "level0_device_physics"
     }
   ],
   "claims": [],
   "evidence_maturity": "computational_prototype",
-  "implemented_capability_count": 2,
+  "implemented_capability_count": 3,
   "project": "SCPN-Z-PINCH-CORE",
   "schema": "scpn.capability-inventory.v1",
   "schema_version": "1.0.0",
   "source": {
     "manifest_path": "reactor-domain.json",
-    "manifest_sha256": "2fd87b7e83de9f3a43ad64c7cfe0be96d91277c8745f51f028d7d67cf9f3cf35"
+    "manifest_sha256": "7c2b921fdbedd5aa5492af2602765ec9b808fd67b8d1ab76f148c0d8b3606c0d"
   }
 }

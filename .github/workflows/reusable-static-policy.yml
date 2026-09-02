@@ -32,7 +32,7 @@ jobs:
       - name: Ruff format
         run: ruff format --check .
       - name: Mypy strict
-        run: mypy --strict src tools tests
+        run: mypy --strict src tools tests benchmarks
       - name: Reactor domain manifest
         run: python tools/validate_reactor_domain.py reactor-domain.json
       - name: Studio descriptor drift

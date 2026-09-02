@@ -14,6 +14,25 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Added
 
+- Level-0 device physics (`src/scpn_z_pinch_core/physics/`), the third
+  implemented capability at `computational_prototype` (ADR 0005): the
+  Bennett equilibrium with its profiles, field, enclosed current and
+  Alfvén quantities; ideal-MHD growth-rate estimates with the Kadomtsev
+  m=0 criterion in closed form on the Bennett profile; the
+  Shumlak-Hartman sheared-flow criterion; the Pease-Braginskii current
+  in the published closed form with NRL formulary coefficients; and a
+  canonical `Level0PhysicsRecord` with explicit `ModelInputs`. Native
+  kernels (`rust/`, crate `scpn-z-pinch-rs`, optional distribution
+  `scpn-z-pinch-native`) reproduce every value bit for bit, proven by
+  parity tests; a standard-conformant benchmark
+  (`benchmarks/level0_physics.py`) with a committed local artefact and
+  `docs/benchmarks.md`. The manifest declares the capability and the
+  owned domain `analytic_device_physics_models`; descriptor and
+  inventory regenerated; the envelope fixture regenerated for the new
+  `manifest_sha256` (plan bytes unchanged). Gates extended: `mypy` scope
+  includes `benchmarks/`, a `rust` CI job runs the crate gates, parity
+  and a benchmark smoke, `make rust` locally.
+
 - Diagnostic-plan depth: per-channel signal inventories, frame
   transformations with a fixed kind-admissibility table and connectivity
   rule, and a clock topology partitioning the physical clocks into rooted

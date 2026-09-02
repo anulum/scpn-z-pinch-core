@@ -27,10 +27,11 @@ __pycache__/
 coverage.xml
 htmlcov/
 
-# Build residues (no build exists; defence-in-depth)
+# Build residues
 build/
 dist/
 *.egg-info/
+rust/target/
 
 # Editors and OS
 .vscode/

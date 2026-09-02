@@ -19,7 +19,7 @@ followed by the evidence record of each implemented capability.
 |---|---|---|
 | Lint | `ruff check .` | all Python under `src/`, `tools/`, and `tests/` |
 | Format | `ruff format --check .` | same scope |
-| Typing | `mypy --strict src tools tests` | zero errors, strict mode |
+| Typing | `mypy --strict src tools tests benchmarks` | zero errors, strict mode |
 | Tests + coverage | `pytest -q --cov=src --cov=tools --cov-branch --cov-fail-under=100` | 100 % statement and branch coverage of `src/` and `tools/` |
 | Domain manifest | `python3 tools/validate_reactor_domain.py reactor-domain.json` | schema, registry version/digest, exact configuration set, capability inventory shape and ceiling rule, safety boundary |
 | Studio descriptor | `python3 tools/derive_studio_descriptor.py --check` | committed descriptor byte-identical to a fresh derivation |
@@ -27,6 +27,8 @@ followed by the evidence record of each implemented capability.
 | Licensing | `reuse lint` | REUSE 3.x compliance of the full tree |
 | Workflow lint | `actionlint` | all files under `.github/workflows/` |
 | Workflow modularity | `python3 tools/audit_workflows.py` | distributed workflow inventory: single ownership per job, coordinator/gate contract, action pinning, size ceilings |
+| Native kernels | `make rust` (`cargo fmt --check`, `cargo clippy --all-targets --features python -- -D warnings`, `cargo test` in `rust/`) | formatting, lints with warnings denied, kernel unit tests |
+| Native parity | `pytest -q tests/test_physics_native_parity.py` | bit-exact float64 agreement of every native kernel with the Python floor (skipped hermetically when the optional native module is absent) |
 | Documentation | `python3 tools/preflight.py --only docs` | UTF-8 readability and relative-link integrity of every Markdown file |
 | Orchestrated | `python3 tools/preflight.py` | fail-closed run of all gates above |
 
@@ -47,7 +49,7 @@ verifies locally and in hosted CI.
 |---|---|
 | `ci.yml` | coordinator and stable required gate |
 | `reusable-static-policy.yml` | lint, format, typing, domain policy, workflow guard |
-| `reusable-tests.yml` | tests with complete statement and branch coverage |
+| `reusable-tests.yml` | tests with complete statement and branch coverage; native crate gates, parity and benchmark smoke |
 | `pre-commit.yml` | exact pre-commit parity |
 | `codeql.yml` | Python code scanning |
 | `security-audit.yml` | secrets, dependency, licence, and workflow policy |
@@ -203,3 +205,66 @@ gate:
   domain (`clk_facility` root, `clk_shot` member); multi-domain rules
   are exercised by test-constructed plans. Scopes are declarations;
   `mapping_state` stays `unmapped`.
+
+## Level-0 device physics
+
+Evidence record of the `level0_device_physics` capability
+(`computational_prototype`; design record: `docs/adr/0005-level0-device-physics.md`).
+
+What is exercised, all under the 100 % statement-and-branch coverage gate
+(`src/scpn_z_pinch_core/physics/`):
+
+- **Bennett equilibrium** (Bennett, Phys. Rev. 45 (1934) 890; Haines,
+  Plasma Phys. Control. Fusion 53 (2011) 093001, §2): the integral
+  pressure balance, the Bennett density and pressure profiles, the
+  azimuthal field of that profile, the enclosed current, and the Alfvén
+  speed and transit time at the on-axis density. Tests close the
+  pressure balance to machine precision, integrate the profile back to
+  the line density, verify Ampère's law at sampled radii, and check the
+  `I^2`, `1/N` and `m_i^{-1/2}` scalings.
+- **Ideal-MHD stability estimates** (Haines 2011 §5; Kadomtsev, Reviews
+  of Plasma Physics 2 (1966) 153): the order-of-magnitude growth rate
+  `gamma ~ k v_A` for a declared wavenumber and the Kadomtsev m=0
+  criterion `-d ln p / d ln r < 4 gamma_ad / (2 + gamma_ad beta)` on the
+  Bennett profile in closed form. Tests reproduce the published
+  conclusion that the Bennett profile is sausage-unstable at every radius
+  for `gamma_ad = 5/3` and that the reduced criterion flips exactly at
+  `gamma_ad = 2`.
+- **Sheared-flow stabilisation** (Shumlak and Hartman, PRL 75 (1995)
+  3285): the threshold `dv_z/dr > 0.1 k v_A` for a declared wavenumber
+  and the disposition of the declared shear; the static class reports
+  no stabilisation.
+- **Pease-Braginskii current** (Pease 1957; Braginskii 1958) in the
+  published closed form of Klíř, The Study of a Fibre Z-Pinch, PhD
+  thesis, CTU Prague (2005), arXiv:physics/0703207, eq. (2.20), with the
+  NRL Plasma Formulary Spitzer and bremsstrahlung coefficients converted
+  to SI. Tests reproduce the quoted hydrogenic reference value
+  (1.37 MA against the literature's ≈ 1.4 MA at `ln Lambda = 10`) and the
+  `sqrt(ln Lambda)` scaling.
+- A composed `Level0PhysicsRecord` (`scpn.z-pinch-level0-physics.v1`
+  `1.0.0`) with canonical bytes, SHA-256 digest and fixed non-claims,
+  built from the validated configuration and explicit `ModelInputs`;
+  every input rejects non-positive and non-finite values.
+- **Native parity**: the Rust crate in `rust/` mirrors every kernel with
+  identical operation order; `tests/test_physics_native_parity.py`
+  compares float64 bit patterns over a 72-point parameter grid plus the
+  stability, criterion and critical-current inputs (99 cases). The
+  native module is optional; the Python floor is the public API.
+- **Benchmark**: `benchmarks/level0_physics.py` per the ecosystem
+  benchmark standard; results in `docs/benchmarks.md` and the committed
+  local artefact `benchmarks/results/level0_physics.local.json`.
+
+Bounded claims — what is NOT claimed:
+
+- Every number is a closed-form evaluation of a cited published model on
+  a synthetic configuration; no equilibrium, stability or transport
+  equation is solved, and no linear eigenvalue problem exists here.
+- No reactivity, yield, gain, breakeven or confinement-time statement is
+  made; the Pease-Braginskii regime label is an energy-balance
+  disposition of the cited model, not a prediction.
+- No value describes, approximates or validates any real machine; the
+  benchmark measures per-point evaluation cost of two implementations of
+  the same closed forms, not physics.
+- Maturity stays `computational_prototype`; `benchmark_validated` would
+  require documented accepted analytical cases with thresholds, which
+  this record does not claim.

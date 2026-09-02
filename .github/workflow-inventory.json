@@ -31,8 +31,8 @@
       "file": "reusable-tests.yml",
       "kind": "reusable",
       "category": 4,
-      "jobs": ["run"],
-      "owner": "unit, component and scientific quality"
+      "jobs": ["run", "rust"],
+      "owner": "unit, component, scientific quality, native parity and benchmark smoke"
     },
     {
       "file": "pre-commit.yml",
