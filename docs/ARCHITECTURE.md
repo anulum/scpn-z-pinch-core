@@ -14,15 +14,20 @@ SCPN Z-Pinch Core — Architecture
 
 `SCPN-Z-PINCH-CORE` is the device-family owner for Z-pinch systems in the
 SCPN Reactor Systems Research Group portfolio. The
-repository owns three implemented capabilities at
+repository owns four implemented capabilities at
 `computational_prototype` in `src/scpn_z_pinch_core/`: the device
 configuration model (design record ADR 0002, evidence record
 `VALIDATION.md#device-configuration-model`), the diagnostic and
 clock semantics model (design record ADR 0003, evidence record
-`VALIDATION.md#diagnostic-and-clock-semantics`) and the level-0
+`VALIDATION.md#diagnostic-and-clock-semantics`), the level-0
 device physics (design record ADR 0005, evidence record
 `VALIDATION.md#level-0-device-physics`; owned domain
-`analytic_device_physics_models`, disjoint from solver mathematics).
+`analytic_device_physics_models`, disjoint from solver mathematics) and
+the device 3D model (design record ADR 0006, evidence record
+`VALIDATION.md#device-3d-model`, consumer contract
+`docs/DEVICE_3D_MODEL_CONTRACT.md`; owned domain
+`device_geometry_and_3d_model`, disjoint from presentation and from
+every engineering lane).
 Every other
 section below describes boundaries and contracts. The claim inventory is
 empty; capability and claim inventories are generated and drift-checked.
@@ -86,10 +91,12 @@ SCPN-CONTROL ──admitted ControlAction──► independent machine protectio
 |---|---|
 | `reactor-domain.json` | portable source of project identity and contracts |
 | `studio/portfolio-descriptor.json` | derived Studio descriptor, `not_federated` |
-| `capability-inventory.json` | generated inventory of the three implemented capabilities |
+| `capability-inventory.json` | generated inventory of the four implemented capabilities |
 | `src/scpn_z_pinch_core/physics/` | level-0 device physics (four cited closed-form models, composed record) |
-| `rust/` | optional native kernels (`scpn-z-pinch-rs`), bit-exact with the Python floor |
-| `benchmarks/` | standard-conformant benchmark and committed local artefact |
+| `src/scpn_z_pinch_core/geometry/` | device geometry, deterministic tessellation, mesh contract, 3D model record, STL/GLB exports |
+| `docs/DEVICE_3D_MODEL_CONTRACT.md` | consumer contract of the exported 3D model files |
+| `rust/` | optional native kernels (`scpn-z-pinch-rs`: physics and geometry), bit-exact with the Python floor |
+| `benchmarks/` | standard-conformant benchmarks and committed local artefacts |
 | `docs/CONTROL_ADAPTER_SPECIFICATION.md` | device-owned adapter contract |
 | `docs/THREAT_MODEL.md` | assets, trust boundaries, misuse paths |
 | `docs/adr/0001-repository-boundary.md` | boundary decision record |

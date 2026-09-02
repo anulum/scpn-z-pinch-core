@@ -9,14 +9,16 @@
 """Device capability models of the SCPN z-pinch device family.
 
 Public surface of the ``device_configuration_model``,
-``diagnostic_clock_semantics`` and ``level0_device_physics`` capabilities
-at ``computational_prototype`` maturity: validated parameter objects,
-synthetic diagnostic and clock declarations aligned with the pinned SPO
-observability catalogue, documented consistency estimates, four cited
-closed-form level-0 physics models evaluated on the validated
-configuration, canonical serialisation with SHA-256 digests, and
-data-only pins to the SPO registries. No claim about any real machine or
-diagnostic is made anywhere in this package.
+``diagnostic_clock_semantics``, ``level0_device_physics`` and
+``device_3d_model`` capabilities at ``computational_prototype`` maturity:
+validated parameter objects, synthetic diagnostic and clock declarations
+aligned with the pinned SPO observability catalogue, documented
+consistency estimates, four cited closed-form level-0 physics models
+evaluated on the validated configuration, a validated device geometry
+with a deterministic tier-G1 3D model and open-format exports, canonical
+serialisation with SHA-256 digests, and data-only pins to the SPO
+registries. No claim about any real machine or diagnostic is made
+anywhere in this package.
 """
 
 from __future__ import annotations
@@ -32,7 +34,32 @@ from scpn_z_pinch_core.configuration import (
     configuration_from_bytes,
     configuration_from_record,
 )
-from scpn_z_pinch_core.errors import DeviceConfigurationError, DiagnosticPlanError
+from scpn_z_pinch_core.errors import (
+    DeviceConfigurationError,
+    DeviceGeometryError,
+    DiagnosticPlanError,
+)
+from scpn_z_pinch_core.geometry import (
+    BODY_NAMES,
+    GEOMETRY_FIELDS,
+    MIN_SEGMENTS,
+    MODEL_NON_CLAIMS,
+    MODEL_SCHEMA,
+    MODEL_SCHEMA_VERSION,
+    MODEL_UNITS,
+    SEGMENT_MULTIPLE,
+    DeviceGeometry,
+    DeviceModel3D,
+    TriangleMesh,
+    build_device_model,
+    geometry_from_bytes,
+    geometry_from_record,
+    glb_bytes,
+    stl_bytes,
+    unit_circle,
+    write_glb,
+    write_stl,
+)
 from scpn_z_pinch_core.observability import (
     APPLICABLE_CANDIDATES,
     CATALOGUE_BINDING,
@@ -94,16 +121,24 @@ __version__: Final = "0.1.0.dev0"
 __all__ = [
     "APPLICABLE_CANDIDATES",
     "BENNETT_WINDOW_EV",
+    "BODY_NAMES",
     "CATALOGUE_BINDING",
     "DEUTERON_MASS_KG",
     "ELEMENTARY_CHARGE_C",
+    "GEOMETRY_FIELDS",
     "IDEAL_MONATOMIC_ADIABATIC_INDEX",
     "LEVEL0_NON_CLAIMS",
     "LEVEL0_SCHEMA",
     "LEVEL0_SCHEMA_VERSION",
+    "MIN_SEGMENTS",
+    "MODEL_NON_CLAIMS",
+    "MODEL_SCHEMA",
+    "MODEL_SCHEMA_VERSION",
+    "MODEL_UNITS",
     "MU0",
     "OWNED_CONFIGURATIONS",
     "PROTON_MASS_KG",
+    "SEGMENT_MULTIPLE",
     "SHUMLAK_HARTMAN_COEFFICIENT",
     "BennettEquilibrium",
     "CandidateProfile",
@@ -114,6 +149,9 @@ __all__ = [
     "DeferredCandidate",
     "DeviceConfiguration",
     "DeviceConfigurationError",
+    "DeviceGeometry",
+    "DeviceGeometryError",
+    "DeviceModel3D",
     "DiagnosticChannelPlan",
     "DiagnosticPlan",
     "DiagnosticPlanError",
@@ -132,13 +170,18 @@ __all__ = [
     "RegistryBinding",
     "SemanticCarrier",
     "ShearAssessment",
+    "TriangleMesh",
     "__version__",
     "bennett_equilibrium",
+    "build_device_model",
     "configuration_from_bytes",
     "configuration_from_record",
     "envelope_for_plan",
     "envelope_from_bytes",
     "envelope_from_record",
+    "geometry_from_bytes",
+    "geometry_from_record",
+    "glb_bytes",
     "growth_rate_estimate",
     "kadomtsev_assessment",
     "level0_physics",
@@ -148,5 +191,9 @@ __all__ = [
     "plan_from_bytes",
     "plan_from_record",
     "shear_assessment",
+    "stl_bytes",
+    "unit_circle",
     "verify_envelope",
+    "write_glb",
+    "write_stl",
 ]

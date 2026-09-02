@@ -12,11 +12,13 @@ SCPN Z-Pinch Core — Architecture summary
 
 `SCPN-Z-PINCH-CORE` is the device-family owner for Z-pinch systems
 (classical and sheared-flow-stabilised) inside the SCPN Reactor Systems
-Research Group. The repository holds three implemented capabilities at
+Research Group. The repository holds four implemented capabilities at
 `computational_prototype` — the device configuration model (ADR 0002),
-the diagnostic and clock semantics model (ADR 0003) and the level-0
+the diagnostic and clock semantics model (ADR 0003), the level-0
 device physics (ADR 0005; cited closed-form models with optional native
-kernels in `rust/`), all in `src/scpn_z_pinch_core/` — alongside the
+kernels in `rust/`) and the device 3D model (ADR 0006; validated
+geometry, deterministic analytic-surface meshes, open exports), all in
+`src/scpn_z_pinch_core/` — alongside the
 device boundary, its ecosystem contracts, and the validation tooling
 that enforces them.
 

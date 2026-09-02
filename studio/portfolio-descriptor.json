@@ -20,6 +20,11 @@
       "evidence_maturity": "computational_prototype",
       "evidence_pointer": "VALIDATION.md#level-0-device-physics",
       "identifier": "level0_device_physics"
+    },
+    {
+      "evidence_maturity": "computational_prototype",
+      "evidence_pointer": "VALIDATION.md#device-3d-model",
+      "identifier": "device_3d_model"
     }
   ],
   "configurations": [
@@ -47,7 +52,7 @@
     "not safety-certified",
     "not autonomous-plant-ready",
     "not commercially reactor-ready",
-    "no implemented solver, controller, dataset, or published artefact; the level-0 analytic device models and their timing benchmark are computational prototypes, not validated performance or confinement claims",
+    "no implemented solver, controller, dataset, or published artefact; the level-0 analytic device models, the analytic-surface device 3D model and their timing benchmarks are computational prototypes, not validated performance, confinement or engineering claims",
     "no experimental correlation",
     "no parameter set describes or validates any real machine"
   ],
@@ -62,7 +67,7 @@
     "manifest_path": "reactor-domain.json",
     "manifest_schema": "scpn.reactor-domain.v1",
     "manifest_schema_version": "1.0.0",
-    "manifest_sha256": "7c2b921fdbedd5aa5492af2602765ec9b808fd67b8d1ab76f148c0d8b3606c0d",
+    "manifest_sha256": "951729466c10f63e43a7262390700c068e1b70819bb33b30b0bea0cb2a609d80",
     "repository": "SCPN-Z-PINCH-CORE"
   },
   "spo_registry": {

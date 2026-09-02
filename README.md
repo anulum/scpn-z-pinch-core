@@ -22,7 +22,7 @@ Phase Orchestrator reactor registry: `z_pinch` (axial-current pinch) and
 `sheared_flow_z_pinch` (flow-stabilised axial-current pinch).
 
 **Evidence maturity: `computational_prototype`** (per-capability; ADR 0002).
-Three capabilities are implemented: the device configuration model —
+Four capabilities are implemented: the device configuration model —
 validated parameter objects with documented consistency estimates,
 canonical serialisation, and a data-only SPO registry pin
 (evidence: `VALIDATION.md#device-configuration-model`); the
@@ -35,7 +35,12 @@ ideal-MHD growth estimates with the Kadomtsev criterion, the
 Shumlak-Hartman sheared-flow criterion, the Pease-Braginskii current)
 evaluated on the validated configuration, with optional native kernels
 proven bit-exact against the Python floor (ADR 0005, evidence:
-`VALIDATION.md#level-0-device-physics`). No parameter set or
+`VALIDATION.md#level-0-device-physics`); and the device 3D model — a
+validated coaxial device geometry tessellated deterministically into
+closed triangle meshes of six analytic bodies, exported as binary STL and
+glTF 2.0 binary, with native kernels bit-exact against the Python floor
+(ADR 0006, evidence: `VALIDATION.md#device-3d-model`, consumer contract
+`docs/DEVICE_3D_MODEL_CONTRACT.md`). No parameter set or
 channel describes any real machine or diagnostic; the claim inventory
 is empty and verified by the domain validator.
 
@@ -46,6 +51,10 @@ This repository owns, for the Z-pinch device family:
 - the analytic device physics models: closed-form and 0-D models from the
   z-pinch literature evaluated on the validated configuration (no solver
   code, no FUSION seam);
+- the device geometry and its 3D model: the coaxial mechanical envelope
+  (electrodes, acceleration and assembly regions, chamber, end walls) and
+  the deterministic analytic-surface model derived from it, with open-format
+  exports (no CAD solid, no engineering property);
 - the device boundary: plant and experiment truth, shot lifecycle, and
   configuration policy for linear plasma columns confined by the azimuthal
   magnetic field of their own axial current, including the classical
@@ -89,9 +98,10 @@ This repository owns, for the Z-pinch device family:
 This repository is not machine-ready, not safety-certified, and not
 reactor-ready. It contains no implemented solver, no controller, no
 experimental correlation, no dataset, and no published artefact; the
-level-0 analytic models and their timing benchmark are computational
-prototypes, not validated performance or confinement claims, and no
-parameter set describes or validates any real machine. Electrode-geometry, driver-class, and fuel-cycle
+level-0 analytic models, the analytic-surface device 3D model and their
+timing benchmarks are computational prototypes, not validated performance,
+confinement or engineering claims, and no parameter set describes or
+validates any real machine. Electrode-geometry, driver-class, and fuel-cycle
 choices are configuration facets, not separate claims. No capability has reached any
 evidence-maturity state beyond `computational_prototype`.
 

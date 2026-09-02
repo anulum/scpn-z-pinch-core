@@ -14,6 +14,28 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Added
 
+- Device 3D model (`src/scpn_z_pinch_core/geometry/`), the fourth
+  implemented capability at `computational_prototype` (ADR 0006): a
+  validated coaxial `DeviceGeometry` (electrodes, acceleration and
+  assembly regions, chamber, end walls) with canonical digest and strict
+  parser; a vendored deterministic unit circle (polynomial sine/cosine
+  with exact symmetry) so every vertex is bit-exact across backends;
+  solid-cylinder and annular-tube tessellation; a closed-mesh contract
+  (`TriangleMesh`: closure and orientation validation, signed volume,
+  surface area, canonical bytes, SHA-256); the composed `DeviceModel3D`
+  record (`scpn.z-pinch-3d-model.v1`) with a pinned reference digest;
+  binary STL and glTF 2.0 binary exports with the consumer contract
+  `docs/DEVICE_3D_MODEL_CONTRACT.md`. Native kernels in `rust/src/geometry/`
+  reproduce every vertex, face and measure bit for bit, proven by parity
+  tests; a standard-conformant benchmark (`benchmarks/device_model_3d.py`)
+  with a committed local artefact and a `docs/benchmarks.md` section. The
+  manifest declares the capability and the owned domain
+  `device_geometry_and_3d_model` with the non-claims reworded; descriptor
+  and inventory regenerated; the envelope fixture regenerated for the new
+  `manifest_sha256` (plan bytes unchanged). Gates: the `rust` CI job runs
+  the geometry parity file and a second benchmark smoke; `mypy` resolves
+  the shared test fixtures module.
+
 - Level-0 device physics (`src/scpn_z_pinch_core/physics/`), the third
   implemented capability at `computational_prototype` (ADR 0005): the
   Bennett equilibrium with its profiles, field, enclosed current and

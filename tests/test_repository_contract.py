@@ -75,6 +75,21 @@ REQUIRED_PATHS = (
     "src/scpn_z_pinch_core/physics/sheared_flow.py",
     "src/scpn_z_pinch_core/physics/pease_braginskii.py",
     "src/scpn_z_pinch_core/physics/level0.py",
+    "docs/adr/0006-device-3d-model.md",
+    "docs/DEVICE_3D_MODEL_CONTRACT.md",
+    "benchmarks/device_model_3d.py",
+    "benchmarks/results/device_model_3d.local.json",
+    "rust/src/geometry/mod.rs",
+    "rust/src/geometry/trig.rs",
+    "rust/src/geometry/primitives.rs",
+    "rust/src/geometry/mesh.rs",
+    "src/scpn_z_pinch_core/geometry/__init__.py",
+    "src/scpn_z_pinch_core/geometry/trig.py",
+    "src/scpn_z_pinch_core/geometry/mesh.py",
+    "src/scpn_z_pinch_core/geometry/primitives.py",
+    "src/scpn_z_pinch_core/geometry/device.py",
+    "src/scpn_z_pinch_core/geometry/model.py",
+    "src/scpn_z_pinch_core/geometry/export.py",
     "reactor-domain.json",
     "requirements-dev.txt",
     "src/scpn_z_pinch_core/__init__.py",
@@ -161,8 +176,14 @@ def test_manifest_declares_exact_configuration_assignment() -> None:
             "evidence_maturity": "computational_prototype",
             "evidence_pointer": "VALIDATION.md#level-0-device-physics",
         },
+        {
+            "identifier": "device_3d_model",
+            "evidence_maturity": "computational_prototype",
+            "evidence_pointer": "VALIDATION.md#device-3d-model",
+        },
     ]
     assert "analytic_device_physics_models" in manifest["owned_domains"]
+    assert "device_geometry_and_3d_model" in manifest["owned_domains"]
     assert manifest["claims"] == []
 
 
@@ -176,7 +197,7 @@ def test_descriptor_and_inventory_embed_current_manifest_digest() -> None:
     assert descriptor["source"]["manifest_sha256"] == digest
     assert inventory["source"]["manifest_sha256"] == digest
     assert descriptor["lifecycle"]["state"] == "not_federated"
-    assert inventory["implemented_capability_count"] == 3
+    assert inventory["implemented_capability_count"] == 4
 
 
 def test_no_agent_state_trees_exist() -> None:

@@ -14,16 +14,21 @@
       "evidence_maturity": "computational_prototype",
       "evidence_pointer": "VALIDATION.md#level-0-device-physics",
       "identifier": "level0_device_physics"
+    },
+    {
+      "evidence_maturity": "computational_prototype",
+      "evidence_pointer": "VALIDATION.md#device-3d-model",
+      "identifier": "device_3d_model"
     }
   ],
   "claims": [],
   "evidence_maturity": "computational_prototype",
-  "implemented_capability_count": 3,
+  "implemented_capability_count": 4,
   "project": "SCPN-Z-PINCH-CORE",
   "schema": "scpn.capability-inventory.v1",
   "schema_version": "1.0.0",
   "source": {
     "manifest_path": "reactor-domain.json",
-    "manifest_sha256": "7c2b921fdbedd5aa5492af2602765ec9b808fd67b8d1ab76f148c0d8b3606c0d"
+    "manifest_sha256": "951729466c10f63e43a7262390700c068e1b70819bb33b30b0bea0cb2a609d80"
   }
 }
