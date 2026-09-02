@@ -6,7 +6,11 @@
 # Contact: www.anulum.li | protoscience@anulum.li
 # SCPN Z-Pinch Core — open-format export tests
 
-"""Binary STL and GLB layouts read back with minimal spec-level readers."""
+"""Binary STL and GLB layouts read back with minimal spec-level readers.
+
+The serialisers are the pinned library's kernels; these tests prove the
+device-side contract (provenance extras, delegation, layout read-back).
+"""
 
 from __future__ import annotations
 
@@ -16,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from scpn_reactor_kernels import geometry as library
 
 from geometry_fixtures import reference_configuration, reference_geometry
 from scpn_z_pinch_core.geometry import (
@@ -23,6 +28,7 @@ from scpn_z_pinch_core.geometry import (
     STL_HEADER,
     build_device_model,
     glb_bytes,
+    glb_extras,
     stl_bytes,
     write_glb,
     write_stl,
@@ -98,6 +104,28 @@ def test_glb_layout_nodes_and_accessors(segments: int) -> None:
             f"<{3 * mesh.face_count}I", binary, index_view["byteOffset"]
         )
         assert stream[:3] == mesh.faces[0]
+
+
+def test_exports_delegate_to_the_library_kernels_with_device_provenance() -> None:
+    """The bytes are the library's, with exactly the model's provenance as extras."""
+    model = build_device_model(reference_configuration(), reference_geometry(), 8)
+    extras = glb_extras(model)
+    assert extras == {
+        "schema": "scpn.z-pinch-3d-model.v1",
+        "schema_version": "1.0.0",
+        "configuration_digest_sha256": model.configuration_digest_sha256,
+        "geometry_digest_sha256": model.geometry_digest_sha256,
+        "model_sha256": model.digest_sha256(),
+        "segments": 8,
+        "units": model.to_record()["units"],
+        "non_claims": model.to_record()["non_claims"],
+    }
+    assert glb_bytes(model) == library.glb_bytes(model.meshes, extras)
+    assert stl_bytes(model.meshes) == library.stl_bytes(model.meshes)
+    assert STL_HEADER is library.STL_HEADER
+    assert GLTF_GENERATOR is library.GLTF_GENERATOR
+    document, _ = read_glb(glb_bytes(model))
+    assert document["extras"] == extras
 
 
 def test_glb_is_deterministic() -> None:

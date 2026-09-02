@@ -17,6 +17,13 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = "AGPL-3.0-or-later"
 dynamic = ["version"]
+# The shared kernel library is pinned to one commit object of its public
+# repository (no release exists yet); the same commit and the digest of its
+# kernel inventory are recorded in reactor-domain.json (kernel_library) and
+# a contract test proves the two pins agree.
+dependencies = [
+    "scpn-reactor-kernels @ git+https://github.com/anulum/scpn-reactor-kernels.git@6f574bfdddadf24c6a4c0a020c0a257fec38231a",
+]
 
 [tool.setuptools.dynamic]
 version = { attr = "scpn_z_pinch_core.__version__" }

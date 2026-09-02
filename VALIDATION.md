@@ -28,7 +28,7 @@ followed by the evidence record of each implemented capability.
 | Workflow lint | `actionlint` | all files under `.github/workflows/` |
 | Workflow modularity | `python3 tools/audit_workflows.py` | distributed workflow inventory: single ownership per job, coordinator/gate contract, action pinning, size ceilings |
 | Native kernels | `make rust` (`cargo fmt --check`, `cargo clippy --all-targets --features python -- -D warnings`, `cargo test` in `rust/`) | formatting, lints with warnings denied, kernel unit tests |
-| Native parity | `pytest -q tests/test_physics_native_parity.py tests/test_geometry_native_parity.py` | bit-exact float64 agreement of every native kernel (physics and geometry) with the Python floor (skipped hermetically when the optional native module is absent) |
+| Native parity | `pytest -q tests/test_physics_native_parity.py tests/test_geometry_native_parity.py` (the second file needs the pinned library's native module) | bit-exact float64 agreement of every native kernel (physics and geometry) with the Python floor (skipped hermetically when the optional native module is absent) |
 | Documentation | `python3 tools/preflight.py --only docs` | UTF-8 readability and relative-link integrity of every Markdown file |
 | Orchestrated | `python3 tools/preflight.py` | fail-closed run of all gates above |
 
@@ -272,11 +272,19 @@ Bounded claims — what is NOT claimed:
 ## Device 3D model
 
 Evidence record of the `device_3d_model` capability
-(`computational_prototype`; design record: `docs/adr/0006-device-3d-model.md`;
-consumer contract: `docs/DEVICE_3D_MODEL_CONTRACT.md`).
+(`computational_prototype`; design records: `docs/adr/0006-device-3d-model.md`
+and `docs/adr/0007-shared-geometry-kernels.md`; consumer contract:
+`docs/DEVICE_3D_MODEL_CONTRACT.md`).
 
-What is exercised, all under the 100 % statement-and-branch coverage gate
-(`src/scpn_z_pinch_core/geometry/`):
+The unit circle, the tessellation primitives, the closed-mesh contract and
+the STL/GLB serialisers are consumed from the shared kernel library
+`scpn-reactor-kernels`, pinned in the manifest (`kernel_library`: commit
+object and kernel-inventory digest) and in `pyproject.toml`; their evidence
+(polynomial accuracy against `libm`, exact polygon-prism identities,
+quadratic convergence, closure and orientation, export layouts, native
+parity) is the library's, at its `VALIDATION.md#geometry-kernels`. What
+this repository exercises, all under the 100 % statement-and-branch
+coverage gate (`src/scpn_z_pinch_core/geometry/`):
 
 - **Device geometry** (`DeviceGeometry`): eight SI parameters of the
   coaxial envelope (inner electrode, outer electrode bore and wall,
@@ -287,50 +295,40 @@ What is exercised, all under the 100 % statement-and-branch coverage gate
   qualitative coaxial-gun/assembly-region arrangement of the sheared-flow
   z-pinch literature (Shumlak et al., Phys. Plasmas 24 (2017) 055702); no
   dimension of any device is used.
-- **Deterministic unit circle**: vendored degree-15 sine and degree-16
-  cosine Taylor polynomials in Horner form on `[0, pi/4]` with exact
-  octant and quadrant symmetry. Tests prove every point of circles with 8
-  to 4096 segments agrees with `math.cos`/`math.sin` to `1e-15`, that
-  points at multiples of `pi/2` are exactly `0` and `±1`, that every
-  quadrant is an exact sign/swap image of the first, that no negative zero
-  is emitted, and that inadmissible segment counts (below 8, not a
-  multiple of 8, booleans) are refused.
-- **Primitives** (solid cylinder, annular tube): vertex and face counts,
-  closure and outward orientation (positive signed volume), the exact
-  polygon-prism identity (mesh volume equals the inscribed-polygon area
-  times height from the same circle points to `1e-14` relative), the tube
-  volume as the exact difference of two cylinder volumes, quadratic
-  convergence of the volume to `pi r^2 h` (error ratio 4 per doubling of
-  segments, checked at 64 and 128), and convergence of the areas to the
-  closed forms; every refusal branch (radii, extents, ordering, segments).
-- **Mesh contract** (`TriangleMesh`): closure and consistent orientation
-  (every directed edge exactly once with its reverse), refusal of too few
-  vertices or faces, non-finite coordinates, out-of-range or repeated
-  indices, degenerate faces, duplicated or flipped faces and open
-  surfaces; signed volume, surface area and bounding box on the unit
-  tetrahedron against closed forms; the documented canonical byte layout
-  and digest; the summary record.
+- **Kernel library pin**: the manifest block `kernel_library` is
+  validated field by field (distribution, version, 40-hex source commit,
+  64-hex inventory digest, sorted unique kernel identifiers, no other
+  field); a contract test proves the manifest, the `pyproject.toml`
+  dependency, the installed library version and the CI install steps name
+  one commit.
 - **Device model** (`DeviceModel3D`, `scpn.z-pinch-3d-model.v1` `1.0.0`):
   six bodies in the fixed order with declared roles and materials and the
   expected placements; convergence of every body volume to its analytic
   cylinder or tube; refusal of a column wider than the outer electrode
-  bore or longer than the assembly region; the fixed body inventory;
+  bore or longer than the assembly region (the library's segment refusal
+  is re-raised under `DeviceGeometryError`); the fixed body inventory;
   determinism (two builds equal, digests equal); canonical bytes and one
-  pinned reference digest (segments = 8) as an immutability fixture.
-- **Exports**: binary STL (header, triangle count, unit normals, float32
-  vertices, zero attributes, exact byte length) and glTF 2.0 binary (magic,
-  version, chunk types and alignment, node names, accessor counts, types
-  and `min`, buffer-view alignment, position and index streams read back)
-  verified with minimal specification-level readers; determinism of the
-  bytes; the file writers.
-- **Native parity**: `rust/src/geometry/` mirrors the unit circle, both
-  primitives, the signed volume and the surface area;
-  `tests/test_geometry_native_parity.py` compares float64 bit patterns of
-  every vertex coordinate, the face index streams and the measures of all
-  six device bodies, and the refusal paths of the bindings.
+  pinned reference digest (segments = 8) as an immutability fixture, which
+  is unchanged by the move to the library (the model record does not
+  depend on the serialisers).
+- **Exports**: the device-side provenance record (`glb_extras`: schema,
+  both source digests, model digest, segment count, units, non-claims) is
+  exactly what the library's GLB carries as document `extras`; the bytes
+  are proven identical to the library serialisers called directly; the
+  binary STL and glTF 2.0 binary layouts are read back with minimal
+  specification-level readers; determinism of the bytes; the file writers.
+- **Native parity**: `tests/test_geometry_native_parity.py` builds the six
+  device bodies on the library's Python floor and compares float64 bit
+  patterns of every vertex coordinate, the face index streams, the signed
+  volume and the surface area against the library's native module
+  (`scpn_reactor_kernels_native`); the consumer inherits the library's
+  parity rather than re-proving the kernels. The crate in `rust/` carries
+  physics only.
 - **Benchmark**: `benchmarks/device_model_3d.py` per the ecosystem
-  benchmark standard; results in `docs/benchmarks.md` and the committed
-  local artefact `benchmarks/results/device_model_3d.local.json`.
+  benchmark standard, measuring the library's Python floor (through the
+  validated device build) against the library's native kernels; results in
+  `docs/benchmarks.md` and the committed local artefact
+  `benchmarks/results/device_model_3d.local.json`.
 
 Bounded claims — what is NOT claimed:
 

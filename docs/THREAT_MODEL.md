@@ -19,7 +19,8 @@ implementation, solver seam, federation) is added.
 
 | Asset | Why it matters |
 |---|---|
-| `reactor-domain.json` | source of project identity; downstream projects bind to it |
+| `reactor-domain.json` | source of project identity; downstream projects bind to it; carries the exact pin of the shared kernel library (`kernel_library`) |
+| Pinned kernel library (`scpn-reactor-kernels` at one commit object) | every vertex of the 3D model and every export byte come from it; a substituted or drifted library would change numerics silently |
 | `studio/portfolio-descriptor.json` | what the portfolio layer would ingest; must never overstate maturity |
 | `capability-inventory.json` | public truthfulness of "zero implemented capabilities" |
 | `docs/CONTROL_ADAPTER_SPECIFICATION.md` | safety-relevant contract text (no-direct-actuation semantics) |
@@ -50,6 +51,7 @@ implementation, solver seam, federation) is added.
 | Treating review-only semantics or a Studio request as an actuator command | `spo_semantic_profile.actionable` is `false`; adapter specification defines no actuation verb; machine-protection statement is a required manifest field the validator enforces |
 | Workflow tampering towards write authority | scaffold contains no write-authority workflow; permissions are empty at top level; action references must be 40-hex commit objects (shared Tier-0 audit enforces) |
 | Dependency substitution | exact version pins; dependabot updates land only through the full gate sequence |
+| Re-pinning the kernel library silently or inconsistently | the manifest, the `pyproject.toml` dependency, the installed package version and the CI install steps must name one commit object (contract test); the validator enforces the 40-hex commit, the 64-hex inventory digest and the consumed kernel identifiers; parity against the library's native module runs in CI |
 | Secret introduction | no secrets exist or are needed; security-audit workflow and review gates scan the diff |
 
 ## Fail-closed behaviour

@@ -38,8 +38,10 @@ proven bit-exact against the Python floor (ADR 0005, evidence:
 `VALIDATION.md#level-0-device-physics`); and the device 3D model — a
 validated coaxial device geometry tessellated deterministically into
 closed triangle meshes of six analytic bodies, exported as binary STL and
-glTF 2.0 binary, with native kernels bit-exact against the Python floor
-(ADR 0006, evidence: `VALIDATION.md#device-3d-model`, consumer contract
+glTF 2.0 binary, composed on the shared geometry kernels of
+`scpn-reactor-kernels` pinned by commit and inventory digest and proven
+bit-exact against that library's native module (ADR 0006 and ADR 0007,
+evidence: `VALIDATION.md#device-3d-model`, consumer contract
 `docs/DEVICE_3D_MODEL_CONTRACT.md`). No parameter set or
 channel describes any real machine or diagnostic; the claim inventory
 is empty and verified by the domain validator.
@@ -54,7 +56,9 @@ This repository owns, for the Z-pinch device family:
 - the device geometry and its 3D model: the coaxial mechanical envelope
   (electrodes, acceleration and assembly regions, chamber, end walls) and
   the deterministic analytic-surface model derived from it, with open-format
-  exports (no CAD solid, no engineering property);
+  exports (no CAD solid, no engineering property); the tessellation, mesh
+  and export kernels themselves are the shared kernel library's, pinned
+  here, not owned here;
 - the device boundary: plant and experiment truth, shot lifecycle, and
   configuration policy for linear plasma columns confined by the azimuthal
   magnetic field of their own axial current, including the classical

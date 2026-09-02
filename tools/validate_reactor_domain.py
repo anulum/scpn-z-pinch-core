@@ -15,10 +15,12 @@ state, no adapter implementation, empty solver seams), the per-state
 capability rules (empty at ``architecture_only``; the ratified item shape
 with resolvable evidence pointers and the ADR 0002 ceiling rule at every
 implemented state), the review-only SPO profile, the no-direct-actuation
-adapter boundary, and the machine-protection final-veto declaration. With
-``--map`` it additionally proves exact agreement with the portfolio machine
-map: project membership, the assigned configuration set, and the pinned
-source-registry version and digest.
+adapter boundary, the machine-protection final-veto declaration, and the
+optional shared-kernel-library pin (``kernel_library``: distribution,
+version, source commit, inventory digest and the consumed kernel
+identifiers, all exact). With ``--map`` it additionally proves exact
+agreement with the portfolio machine map: project membership, the assigned
+configuration set, and the pinned source-registry version and digest.
 """
 
 from __future__ import annotations
@@ -45,6 +47,10 @@ EVIDENCE_STATES: Final = (
 )
 HEX_DIGEST: Final = re.compile(r"^[0-9a-f]{64}$")
 IDENTIFIER: Final = re.compile(r"^[a-z][a-z0-9_]*$")
+COMMIT_OBJECT: Final = re.compile(r"^[0-9a-f]{40}$")
+KERNEL_LIBRARY_FIELDS: Final = frozenset(
+    {"distribution", "version", "source_commit", "inventory_sha256", "kernels"}
+)
 
 
 def _require_string(
@@ -331,6 +337,58 @@ def _validate_registry_pin(
     return version, digest
 
 
+def _validate_kernel_library(manifest: dict[str, Any], findings: list[str]) -> None:
+    """Validate the optional pin of the shared kernel library.
+
+    A repository that consumes ``scpn-reactor-kernels`` records the exact
+    distribution, version, source commit object and kernel-inventory digest
+    it depends on, plus the sorted identifiers of the kernels it consumes;
+    every field is exact and no other field is admitted. Absence of the
+    block is valid (the repository consumes no shared kernel).
+
+    Parameters
+    ----------
+    manifest
+        Decoded manifest object.
+    findings
+        Mutable finding sink.
+    """
+    if "kernel_library" not in manifest:
+        return
+    pin = manifest["kernel_library"]
+    if not isinstance(pin, dict):
+        findings.append("kernel_library: must be an object")
+        return
+    unknown = sorted(set(pin) - KERNEL_LIBRARY_FIELDS)
+    if unknown:
+        findings.append(f"kernel_library: unknown fields {unknown!r}")
+    for key in ("distribution", "version"):
+        value = pin.get(key)
+        if not isinstance(value, str) or not value:
+            findings.append(f"kernel_library.{key}: must be a non-empty string")
+    commit = pin.get("source_commit")
+    if not isinstance(commit, str) or COMMIT_OBJECT.fullmatch(commit) is None:
+        findings.append("kernel_library.source_commit: must be a 40-hex commit object")
+    digest = pin.get("inventory_sha256")
+    if not isinstance(digest, str) or HEX_DIGEST.fullmatch(digest) is None:
+        findings.append(
+            "kernel_library.inventory_sha256: must be 64 lowercase "
+            "hexadecimal characters"
+        )
+    kernels = pin.get("kernels")
+    if not isinstance(kernels, list) or not kernels:
+        findings.append("kernel_library.kernels: must be a non-empty list")
+        return
+    names: list[str] = []
+    for item in kernels:
+        if not isinstance(item, str) or IDENTIFIER.fullmatch(item) is None:
+            findings.append(f"kernel_library.kernels: invalid identifier {item!r}")
+            continue
+        names.append(item)
+    if len(names) != len(set(names)) or names != sorted(names):
+        findings.append("kernel_library.kernels: identifiers must be unique and sorted")
+
+
 def _cross_check_map(
     manifest: dict[str, Any],
     map_path: Path,
@@ -433,6 +491,7 @@ def validate_manifest(manifest_path: Path, map_path: Path | None) -> list[str]:
     configurations = _validate_configurations(manifest, findings)
     registry = _validate_registry_pin(manifest, findings)
     _validate_safety(manifest, findings)
+    _validate_kernel_library(manifest, findings)
     if map_path is not None:
         _cross_check_map(manifest, map_path, configurations, registry, findings)
     return findings

@@ -85,9 +85,16 @@ Segment counts are multiples of eight (at least eight).
 
 The same configuration, geometry and segment count always yield the same
 records, the same mesh bytes and the same export bytes, on every backend:
-the vertex coordinates are computed by a vendored polynomial unit circle
-with fixed operation order, proven bit-exact between the Python floor and
-the native kernels.
+the vertex coordinates are computed by the polynomial unit circle of the
+shared kernel library `scpn-reactor-kernels` (pinned by commit object and
+kernel-inventory digest in `reactor-domain.json`, `kernel_library`) with
+fixed operation order, proven bit-exact between that library's Python
+floor and its native kernels, and the device model is proven bit-exact
+against the library's native module body by body. The serialisers are the
+library's kernel `geometry_exports`: the binary STL header and the glTF
+`asset.generator` name that kernel, while the document `extras` carry this
+repository's provenance (schema, digests, units, non-claims). A change of
+the library pin is a governed data change of this repository.
 
 ## Non-claims
 

@@ -53,14 +53,17 @@ this repository until it appears in the capability inventory with evidence.
   and D-D reactivity under its own acceptance contract.
 - **Device 3D model** (landed 2026-09-02) — validated coaxial device
   geometry (electrodes, acceleration and assembly regions, chamber, end
-  walls), deterministic tessellation of six analytic bodies on a vendored
-  bit-exact unit circle, a closed-mesh contract with canonical digests, a
-  canonical `DeviceModel3D` record, binary STL and glTF 2.0 exports with a
-  published consumer contract, native kernels bit-exact with the Python
-  floor, and a standard-conformant benchmark; `computational_prototype`
-  (ADR 0006, `VALIDATION.md#device-3d-model`). Follow-ups under the same
-  capability: B-rep CAD solids (a separate tooling decision), coil and
-  pulsed-power layouts, and mesh contracts for the engineering lanes.
+  walls), deterministic tessellation of six analytic bodies, a canonical
+  `DeviceModel3D` record, binary STL and glTF 2.0 exports with a published
+  consumer contract, and a standard-conformant benchmark;
+  `computational_prototype` (ADR 0006, `VALIDATION.md#device-3d-model`).
+  Since 2026-09-02 the unit circle, the primitives, the mesh contract and
+  the serialisers are consumed from the shared kernel library
+  `scpn-reactor-kernels`, pinned by commit object and inventory digest
+  (ADR 0007), and the model is proven bit-exact against that library's
+  native module. Follow-ups under the same capability: B-rep CAD solids (a
+  separate tooling decision), coil and pulsed-power layouts, and mesh
+  contracts for the engineering lanes.
 
 ## Planned (no implementation exists; ordering is not a commitment)
 1. **Safety-envelope declaration** — machine-readable operational envelope

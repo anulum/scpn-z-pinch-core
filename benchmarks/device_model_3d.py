@@ -6,17 +6,18 @@
 # Contact: www.anulum.li | protoscience@anulum.li
 # SCPN Z-Pinch Core — device 3D model benchmark
 
-"""Benchmark the tier-G1 tessellation kernels: Python floor versus native.
+"""Benchmark the device 3D model: library Python floor versus library native.
 
 Follows the ecosystem benchmark standard: warm-up, repeated samples,
 percentiles, one row per (operation, backend), unavailable backends marked
 explicitly, full provenance in the artefact. The operation is one full
 device tessellation (six bodies) at a declared segment count followed by
 the signed volume and surface area of every body; each sample times one
-full pass and the cost is reported per generated face. The native row
-calls the kernels per body through the binding (call-through cost, not a
-vectorised pipeline). Nothing measured here is a physics or engineering
-claim.
+full pass and the cost is reported per generated face. Both backends are
+the pinned shared kernel library's: the floor row builds the validated
+device model on its Python kernels, the native row calls its native
+kernels per body through the binding (call-through cost, not a vectorised
+pipeline). Nothing measured here is a physics or engineering claim.
 """
 
 from __future__ import annotations
@@ -108,15 +109,15 @@ def floor_pass(segments: int) -> tuple[float, int]:
 
 
 def native_pass_factory() -> Callable[[int], tuple[float, int]] | None:
-    """Return the native device pass when the native module is importable.
+    """Return the native device pass when the library's native module imports.
 
     Returns
     -------
     callable or None
-        The pass function, or None when scpn_z_pinch_native is absent.
+        The pass function, or None when scpn_reactor_kernels_native is absent.
     """
     try:
-        native = importlib.import_module("scpn_z_pinch_native")
+        native = importlib.import_module("scpn_reactor_kernels_native")
     except ImportError:
         return None
 
@@ -295,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
                 "name": "device_tessellation_and_measures",
                 "backend": "rust_native",
                 "stats": None,
-                "status": "unavailable: scpn_z_pinch_native not installed",
+                "status": "unavailable: scpn_reactor_kernels_native not installed",
             }
         )
     else:
@@ -306,7 +307,10 @@ def main(argv: list[str] | None = None) -> int:
                 "backend": "rust_native",
                 "stats": stats,
                 "status": "measured",
-                "requires": "optional native build (rust/, maturin)",
+                "requires": (
+                    "optional native build of the pinned kernel library "
+                    "(its rust/, maturin)"
+                ),
             }
         )
         floor_p50 = results[0]["stats"]["p50_us_per_face"]

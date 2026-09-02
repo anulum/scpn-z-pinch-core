@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T01:24:53.063702+00:00",
+  "generated_at": "2026-09-02T15:06:26.486456+00:00",
   "label": "local",
   "parameters": {
     "repeats": 20,
@@ -7,10 +7,10 @@
     "warmup": 3
   },
   "platform": {
-    "commit": "4f2c76c49b50211cd55e4b8d86193cf194bc71a9",
+    "commit": "598fa4c2b40aec37e9289d8166367d3aca22ac13",
     "cpu_model": "11th Gen Intel(R) Core(TM) i5-11600K @ 3.90GHz",
     "isolated_cores": false,
-    "load_average_1min_at_start": "3.35",
+    "load_average_1min_at_start": "6.67",
     "machine": "x86_64",
     "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
     "python": "3.12.3"
@@ -21,30 +21,30 @@
       "name": "device_tessellation_and_measures",
       "stats": {
         "faces_per_pass": 131072.0,
-        "max_us_per_face": 3.9198805236816407,
-        "mean_us_per_face": 3.6355222560882567,
-        "min_us_per_face": 3.3254714584350586,
-        "p50_us_per_face": 3.607336227416992,
-        "p95_us_per_face": 3.8813254165649416,
-        "p99_us_per_face": 3.9198805236816407,
-        "throughput_faces_per_s": 277212.8620558453
+        "max_us_per_face": 6.069087280273438,
+        "mean_us_per_face": 5.070859467697144,
+        "min_us_per_face": 4.376252136230469,
+        "p50_us_per_face": 5.068848892211914,
+        "p95_us_per_face": 5.720151893615722,
+        "p99_us_per_face": 6.069087280273438,
+        "throughput_faces_per_s": 197283.45059495865
       },
       "status": "measured"
     },
     {
       "backend": "rust_native",
       "name": "device_tessellation_and_measures",
-      "requires": "optional native build (rust/, maturin)",
-      "speedup_p50_vs_python_floor": 29.85910845933012,
+      "requires": "optional native build of the pinned kernel library (its rust/, maturin)",
+      "speedup_p50_vs_python_floor": 25.684308967953655,
       "stats": {
         "faces_per_pass": 131072.0,
-        "max_us_per_face": 0.14664593505859375,
-        "mean_us_per_face": 0.12270035705566407,
-        "min_us_per_face": 0.11238101196289063,
-        "p50_us_per_face": 0.12081192016601562,
-        "p95_us_per_face": 0.1338405303955078,
-        "p99_us_per_face": 0.14664593505859375,
-        "throughput_faces_per_s": 8277328.914446804
+        "max_us_per_face": 0.24877247619628906,
+        "mean_us_per_face": 0.18922627105712891,
+        "min_us_per_face": 0.12632133483886718,
+        "p50_us_per_face": 0.19735196685791015,
+        "p95_us_per_face": 0.24868479919433595,
+        "p99_us_per_face": 0.24877247619628906,
+        "throughput_faces_per_s": 5067089.099344938
       },
       "status": "measured"
     }

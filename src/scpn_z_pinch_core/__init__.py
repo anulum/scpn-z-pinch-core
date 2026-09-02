@@ -15,10 +15,10 @@ validated parameter objects, synthetic diagnostic and clock declarations
 aligned with the pinned SPO observability catalogue, documented
 consistency estimates, four cited closed-form level-0 physics models
 evaluated on the validated configuration, a validated device geometry
-with a deterministic tier-G1 3D model and open-format exports, canonical
-serialisation with SHA-256 digests, and data-only pins to the SPO
-registries. No claim about any real machine or diagnostic is made
-anywhere in this package.
+with a deterministic tier-G1 3D model built on the pinned shared kernel
+library and open-format exports, canonical serialisation with SHA-256
+digests, and data-only pins to the SPO registries. No claim about any
+real machine or diagnostic is made anywhere in this package.
 """
 
 from __future__ import annotations
@@ -42,21 +42,18 @@ from scpn_z_pinch_core.errors import (
 from scpn_z_pinch_core.geometry import (
     BODY_NAMES,
     GEOMETRY_FIELDS,
-    MIN_SEGMENTS,
     MODEL_NON_CLAIMS,
     MODEL_SCHEMA,
     MODEL_SCHEMA_VERSION,
     MODEL_UNITS,
-    SEGMENT_MULTIPLE,
     DeviceGeometry,
     DeviceModel3D,
-    TriangleMesh,
     build_device_model,
     geometry_from_bytes,
     geometry_from_record,
     glb_bytes,
+    glb_extras,
     stl_bytes,
-    unit_circle,
     write_glb,
     write_stl,
 )
@@ -130,7 +127,6 @@ __all__ = [
     "LEVEL0_NON_CLAIMS",
     "LEVEL0_SCHEMA",
     "LEVEL0_SCHEMA_VERSION",
-    "MIN_SEGMENTS",
     "MODEL_NON_CLAIMS",
     "MODEL_SCHEMA",
     "MODEL_SCHEMA_VERSION",
@@ -138,7 +134,6 @@ __all__ = [
     "MU0",
     "OWNED_CONFIGURATIONS",
     "PROTON_MASS_KG",
-    "SEGMENT_MULTIPLE",
     "SHUMLAK_HARTMAN_COEFFICIENT",
     "BennettEquilibrium",
     "CandidateProfile",
@@ -170,7 +165,6 @@ __all__ = [
     "RegistryBinding",
     "SemanticCarrier",
     "ShearAssessment",
-    "TriangleMesh",
     "__version__",
     "bennett_equilibrium",
     "build_device_model",
@@ -182,6 +176,7 @@ __all__ = [
     "geometry_from_bytes",
     "geometry_from_record",
     "glb_bytes",
+    "glb_extras",
     "growth_rate_estimate",
     "kadomtsev_assessment",
     "level0_physics",
@@ -192,7 +187,6 @@ __all__ = [
     "plan_from_record",
     "shear_assessment",
     "stl_bytes",
-    "unit_circle",
     "verify_envelope",
     "write_glb",
     "write_stl",

@@ -16,8 +16,9 @@ Research Group. The repository holds four implemented capabilities at
 `computational_prototype` — the device configuration model (ADR 0002),
 the diagnostic and clock semantics model (ADR 0003), the level-0
 device physics (ADR 0005; cited closed-form models with optional native
-kernels in `rust/`) and the device 3D model (ADR 0006; validated
-geometry, deterministic analytic-surface meshes, open exports), all in
+kernels in `rust/`) and the device 3D model (ADR 0006 and ADR 0007;
+validated geometry, deterministic analytic-surface meshes composed on the
+pinned shared kernel library `scpn-reactor-kernels`, open exports), all in
 `src/scpn_z_pinch_core/` — alongside the
 device boundary, its ecosystem contracts, and the validation tooling
 that enforces them.

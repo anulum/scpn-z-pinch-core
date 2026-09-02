@@ -4,11 +4,15 @@
 # © Code 2020–2026 Miroslav Šotek. All rights reserved.
 # ORCID: 0009-0009-3560-0851
 # Contact: www.anulum.li | protoscience@anulum.li
-# SCPN Z-Pinch Core — native geometry parity tests
+# SCPN Z-Pinch Core — device model parity against the library's native kernels
 
-"""Bit-exact parity of the geometry kernels between Python and Rust.
+"""Bit-exact parity of the device model against the pinned library's native kernels.
 
-Skipped hermetically when the optional native module is absent; when
+The device model is composed on the Python floor of the shared kernel
+library; this file proves that every body it builds agrees bit for bit
+with the library's native tessellation and mesh measures, so the consumer
+inherits the library's parity rather than re-proving the kernels. Skipped
+hermetically when the library's optional native module is absent; when
 present, every vertex coordinate, face index and measure is compared by
 float64 bit pattern, never by tolerance. All inputs are synthetic.
 """
@@ -23,70 +27,67 @@ from geometry_fixtures import (
     reference_geometry,
     stream_bits,
 )
-from scpn_z_pinch_core.geometry import (
-    annular_tube,
-    build_device_model,
-    cylinder_solid,
-    unit_circle,
-)
+from scpn_z_pinch_core.geometry import build_device_model
 
-native = pytest.importorskip("scpn_z_pinch_native")
+native = pytest.importorskip("scpn_reactor_kernels_native")
 
 
-@pytest.mark.parametrize("segments", [8, 16, 24, 64, 1024])
-def test_unit_circle_is_bit_exact(segments: int) -> None:
-    """The flat cos/sin stream agrees bit for bit."""
-    floor = [component for point in unit_circle(segments) for component in point]
-    assert stream_bits(floor) == stream_bits(native.unit_circle(segments))
-
-
-@pytest.mark.parametrize(
-    ("radius", "low", "high"), [(0.05, 0.0, 1.0), (0.123, -0.5, 1.75)]
-)
-@pytest.mark.parametrize("segments", [8, 32])
-def test_cylinder_is_bit_exact(
-    radius: float, low: float, high: float, segments: int
-) -> None:
-    """Vertices and faces of the solid cylinder agree exactly."""
-    vertices, faces = cylinder_solid(radius, low, high, segments)
-    got_vertices, got_faces = native.tessellate_cylinder(radius, low, high, segments)
-    assert stream_bits([c for v in vertices for c in v]) == stream_bits(got_vertices)
-    assert [i for f in faces for i in f] == got_faces
-
-
-@pytest.mark.parametrize(("inner", "outer"), [(0.1, 0.11), (0.3, 0.55)])
-@pytest.mark.parametrize("segments", [8, 32])
-def test_tube_is_bit_exact(inner: float, outer: float, segments: int) -> None:
-    """Vertices and faces of the annular tube agree exactly."""
-    vertices, faces = annular_tube(inner, outer, 0.0, 1.6, segments)
-    got_vertices, got_faces = native.tessellate_annular_tube(
-        inner, outer, 0.0, 1.6, segments
+def native_bodies(segments: int) -> list[tuple[list[float], list[int]]]:
+    """Tessellate the six device bodies through the library's native kernels."""
+    geometry = reference_geometry()
+    column = reference_configuration().column
+    z_end = geometry.acceleration_region_length_m
+    z_device = geometry.device_length_m
+    streams = (
+        native.tessellate_cylinder(
+            geometry.inner_electrode_radius_m, 0.0, z_end, segments
+        ),
+        native.tessellate_annular_tube(
+            geometry.outer_electrode_inner_radius_m,
+            geometry.outer_electrode_outer_radius_m,
+            0.0,
+            z_device,
+            segments,
+        ),
+        native.tessellate_annular_tube(
+            geometry.chamber_inner_radius_m,
+            geometry.chamber_outer_radius_m,
+            0.0,
+            z_device,
+            segments,
+        ),
+        native.tessellate_cylinder(
+            geometry.chamber_outer_radius_m,
+            0.0 - geometry.end_wall_thickness_m,
+            0.0,
+            segments,
+        ),
+        native.tessellate_cylinder(
+            geometry.chamber_outer_radius_m,
+            z_device,
+            z_device + geometry.end_wall_thickness_m,
+            segments,
+        ),
+        native.tessellate_cylinder(
+            column.column_radius_m, z_end, z_end + column.column_length_m, segments
+        ),
     )
-    assert stream_bits([c for v in vertices for c in v]) == stream_bits(got_vertices)
-    assert [i for f in faces for i in f] == got_faces
+    return [(list(vertices), list(faces)) for vertices, faces in streams]
 
 
-def test_measures_of_every_body_are_bit_exact() -> None:
-    """Volume and area of the six device bodies agree bit for bit."""
-    model = build_device_model(reference_configuration(), reference_geometry(), 64)
-    for mesh in model.meshes:
-        vertices = [c for v in mesh.vertices for c in v]
-        faces = [i for f in mesh.faces for i in f]
-        assert bits(native.mesh_volume(vertices, faces)) == bits(
-            mesh.signed_volume_m3()
-        )
+@pytest.mark.parametrize("segments", [8, 32, 64])
+def test_every_body_is_bit_exact_with_the_library_native_kernels(
+    segments: int,
+) -> None:
+    """Vertices, faces, volume and area of all six bodies agree bit for bit."""
+    model = build_device_model(
+        reference_configuration(), reference_geometry(), segments
+    )
+    bodies = native_bodies(segments)
+    for mesh, (vertices, faces) in zip(model.meshes, bodies, strict=True):
+        floor = [c for v in mesh.vertices for c in v]
+        assert stream_bits(floor) == stream_bits(vertices)
+        assert [i for f in mesh.faces for i in f] == faces
+        volume = native.mesh_volume(vertices, faces)
+        assert bits(volume) == bits(mesh.signed_volume_m3())
         assert bits(native.mesh_area(vertices, faces)) == bits(mesh.surface_area_m2())
-
-
-def test_native_refusals_mirror_the_floor() -> None:
-    """Invalid segment counts and malformed streams raise ValueError."""
-    with pytest.raises(ValueError, match="multiple of 8"):
-        native.unit_circle(12)
-    with pytest.raises(ValueError, match="at least 8"):
-        native.tessellate_cylinder(1.0, 0.0, 1.0, 4)
-    with pytest.raises(ValueError, match="at least 8"):
-        native.tessellate_annular_tube(0.5, 1.0, 0.0, 1.0, 4)
-    with pytest.raises(ValueError, match="flat streams of triples"):
-        native.mesh_volume([0.0, 0.0], [0, 1, 2])
-    with pytest.raises(ValueError, match="out of range"):
-        native.mesh_area([0.0] * 9, [0, 1, 7])

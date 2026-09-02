@@ -12,6 +12,35 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ## [Unreleased]
 
+### Changed
+
+- The device 3D model consumes the shared geometry kernels of
+  `scpn-reactor-kernels` instead of carrying copies (ADR 0007): the unit
+  circle, the tessellation primitives, the closed-mesh contract and the
+  STL/GLB serialisers with their native mirrors are removed from
+  `src/scpn_z_pinch_core/geometry/` and `rust/src/`; `model.py` composes
+  the six bodies on the library's primitives (the mesh type of every body
+  is the library's `TriangleMesh`; the library's segment refusal is
+  re-raised as `DeviceGeometryError`) and `export.py` keeps only the
+  device-side provenance (`glb_extras`) handed to the library serialisers.
+  The library is the one runtime dependency, pinned to a commit object in
+  `pyproject.toml`; the manifest records the same commit, the library's
+  kernel-inventory digest and the consumed kernel identifiers in a new
+  optional `kernel_library` block enforced by the validator, and declares
+  the excluded domain `shared_physics_geometry_and_numerics_kernels`
+  (owner `SCPN-REACTOR-KERNELS`). Parity of the device model is proven
+  body by body against the library's native module; the crate
+  `scpn-z-pinch-rs` carries physics only; the 3D-model benchmark measures
+  the library's floor against the library's native kernels with a
+  regenerated local artefact. Public surface: the library symbols
+  (`TriangleMesh`, `unit_circle`, `MIN_SEGMENTS`, `SEGMENT_MULTIPLE`) are
+  no longer re-exported; `glb_extras` is added. Exported bytes change in
+  the binary STL header and the glTF `asset.generator` only; model and
+  mesh digests are unchanged. Descriptor and inventory regenerated; the
+  envelope fixture regenerated for the new `manifest_sha256` (plan bytes
+  unchanged). CI installs the package with its pinned dependency and
+  builds both native modules for the parity job.
+
 ### Added
 
 - Device 3D model (`src/scpn_z_pinch_core/geometry/`), the fourth

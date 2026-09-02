@@ -44,27 +44,29 @@ native module and is never the default.
 ## Device 3D model tessellation — local workstation (non-isolated)
 
 Artefact: `benchmarks/results/device_model_3d.local.json`
-(schema `scpn-z-pinch-core.device-model-3d-benchmark.v1`, generated 2026-09-02T01:24:53.063702+00:00, at parent commit
-`4f2c76c49b50` with the working tree of the landing commit).
+(schema `scpn-z-pinch-core.device-model-3d-benchmark.v1`, generated 2026-09-02T15:06:26.486456+00:00, at parent commit
+`598fa4c2b40a` with the working tree of the landing commit).
 Host: 11th Gen Intel(R) Core(TM) i5-11600K @ 3.90GHz, Linux-7.0.0-30-generic-x86_64-with-glibc2.39, Python 3.12.3;
-load average at start 3.35; cores not
+load average at start 6.67 (other work was running on the host); cores not
 isolated (shared workstation, so treat the numbers as indicative).
 Operation: one full device tessellation (six bodies, 131072 faces at
 4096 segments) followed by the signed volume and surface area of every
 body; 3 warm-up passes, 20 timed passes; time per generated face.
-The Python floor row includes the `TriangleMesh` validation (closure and
-orientation checks) that every public build performs; the native row
-measures the kernels through their bindings (tessellation, volume, area)
-without that validation, so the ratio compares a validated build against
-the raw kernel cost.
+Both backends are the pinned shared kernel library's
+(`scpn-reactor-kernels`, ADR 0007). The Python floor row includes the
+library's `TriangleMesh` validation (closure and orientation checks) that
+every public build performs; the native row measures the library's native
+kernels through their bindings (tessellation, volume, area) without that
+validation, so the ratio compares a validated build against the raw kernel
+cost.
 
 | Backend | P50 µs/face | P95 µs/face | P99 µs/face | mean µs/face | throughput faces/s | status |
 |---|---|---|---|---|---|---|
-| `python_floor` (public API, always available) | 3.607 | 3.881 | 3.920 | 3.636 | 277213 | measured |
-| `rust_native` (optional build: `rust/`, maturin) | 0.121 | 0.134 | 0.147 | 0.123 | 8277329 | measured |
+| `python_floor` (public API, always available) | 5.069 | 5.720 | 6.069 | 5.071 | 197283 | measured |
+| `rust_native` (optional build of the pinned library: its `rust/`, maturin) | 0.197 | 0.249 | 0.249 | 0.189 | 5067089 | measured |
 
 P50 speed-up of the native kernels over the validated Python floor:
-29.9×. The fast row requires the optional native module and is never
+25.7×. The fast row requires the optional native module and is never
 the default.
 
 ## Fixed-runner (CI) number
@@ -80,6 +82,9 @@ is the local, non-isolated one above.
 ```bash
 make rust
 VIRTUAL_ENV=.venv PATH=.venv/bin:$PATH maturin develop --release -m rust/Cargo.toml
+# the 3D-model benchmark needs the pinned library's native module; build it
+# from the library checkout at the manifest's kernel_library.source_commit:
+VIRTUAL_ENV=.venv PATH=.venv/bin:$PATH maturin develop --release -m <scpn-reactor-kernels>/rust/Cargo.toml
 .venv/bin/python benchmarks/level0_physics.py --points 100000 --warmup 3 --repeats 20 --label local
 .venv/bin/python benchmarks/device_model_3d.py --segments 4096 --warmup 3 --repeats 20 --label local
 ```

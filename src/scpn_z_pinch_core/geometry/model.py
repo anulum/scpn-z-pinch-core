@@ -17,7 +17,10 @@ segment count, a summary of every body (counts, volume, area, bounding
 box, mesh digest) and fixed non-claims; the SHA-256 of that record
 identifies the exact model. The meshes are analytic surfaces: the plasma
 body is the configuration's column, not an equilibrium boundary, and no
-body carries an engineering property.
+body carries an engineering property. The unit circle, the primitives and
+the mesh contract are consumed from the pinned shared kernel library
+(``scpn_reactor_kernels.geometry``, ADR 0007); this module owns only the
+device composition.
 """
 
 from __future__ import annotations
@@ -27,12 +30,17 @@ import json
 from dataclasses import dataclass
 from typing import Any, Final
 
+from scpn_reactor_kernels.errors import GeometryError
+from scpn_reactor_kernels.geometry import (
+    TriangleMesh,
+    annular_tube,
+    cylinder_solid,
+    require_segments,
+)
+
 from scpn_z_pinch_core.configuration import DeviceConfiguration
 from scpn_z_pinch_core.errors import DeviceGeometryError
 from scpn_z_pinch_core.geometry.device import DeviceGeometry
-from scpn_z_pinch_core.geometry.mesh import TriangleMesh
-from scpn_z_pinch_core.geometry.primitives import annular_tube, cylinder_solid
-from scpn_z_pinch_core.geometry.trig import require_segments
 
 MODEL_SCHEMA: Final = "scpn.z-pinch-3d-model.v1"
 MODEL_SCHEMA_VERSION: Final = "1.0.0"
@@ -179,11 +187,15 @@ def build_device_model(
     Raises
     ------
     DeviceGeometryError
-        If the segment count is invalid, if the plasma column does not fit
-        inside the outer electrode bore, or if the column is longer than
-        the assembly region.
+        If the segment count is invalid (the library's refusal is re-raised
+        under the device error type with its message), if the plasma column
+        does not fit inside the outer electrode bore, or if the column is
+        longer than the assembly region.
     """
-    require_segments(segments)
+    try:
+        require_segments(segments)
+    except GeometryError as exc:
+        raise DeviceGeometryError(str(exc)) from exc
     column = configuration.column
     if column.column_radius_m >= geometry.outer_electrode_inner_radius_m:
         raise DeviceGeometryError(

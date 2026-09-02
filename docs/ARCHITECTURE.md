@@ -93,9 +93,10 @@ SCPN-CONTROL ──admitted ControlAction──► independent machine protectio
 | `studio/portfolio-descriptor.json` | derived Studio descriptor, `not_federated` |
 | `capability-inventory.json` | generated inventory of the four implemented capabilities |
 | `src/scpn_z_pinch_core/physics/` | level-0 device physics (four cited closed-form models, composed record) |
-| `src/scpn_z_pinch_core/geometry/` | device geometry, deterministic tessellation, mesh contract, 3D model record, STL/GLB exports |
+| `src/scpn_z_pinch_core/geometry/` | device geometry, 3D model composition on the pinned shared geometry kernels, export provenance |
+| `reactor-domain.json` → `kernel_library` | exact pin of `scpn-reactor-kernels` (commit object, kernel-inventory digest, consumed kernels; ADR 0007) |
 | `docs/DEVICE_3D_MODEL_CONTRACT.md` | consumer contract of the exported 3D model files |
-| `rust/` | optional native kernels (`scpn-z-pinch-rs`: physics and geometry), bit-exact with the Python floor |
+| `rust/` | optional native physics kernels (`scpn-z-pinch-rs`), bit-exact with the Python floor; geometry parity is proven against the library's native module |
 | `benchmarks/` | standard-conformant benchmarks and committed local artefacts |
 | `docs/CONTROL_ADAPTER_SPECIFICATION.md` | device-owned adapter contract |
 | `docs/THREAT_MODEL.md` | assets, trust boundaries, misuse paths |

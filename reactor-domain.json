@@ -72,11 +72,27 @@
     {
       "domain": "reversed_field_pinch_devices",
       "owner": "SCPN-RFP-CORE"
+    },
+    {
+      "domain": "shared_physics_geometry_and_numerics_kernels",
+      "owner": "SCPN-REACTOR-KERNELS"
     }
   ],
   "fusion_solver_seams": {
     "active": [],
     "policy": "Versioned seams from SCPN-FUSION-CORE may be consumed only after the reactor family migration gate proves exact replacement; no solver code is copied into this repository."
+  },
+  "kernel_library": {
+    "distribution": "scpn-reactor-kernels",
+    "inventory_sha256": "b065c46b9f54d478d94be5cfeb61e1300b4ddae47e57f3992a985adfb2cb5dbf",
+    "kernels": [
+      "geometry_exports",
+      "geometry_mesh_contract",
+      "geometry_primitives",
+      "geometry_unit_circle"
+    ],
+    "source_commit": "6f574bfdddadf24c6a4c0a020c0a257fec38231a",
+    "version": "0.1.0.dev0"
   },
   "license": "AGPL-3.0-or-later",
   "machine_protection": {
@@ -88,7 +104,7 @@
     "not safety-certified",
     "not autonomous-plant-ready",
     "not commercially reactor-ready",
-    "no implemented solver, controller, dataset, or published artefact; the level-0 analytic device models, the analytic-surface device 3D model and their timing benchmarks are computational prototypes, not validated performance, confinement or engineering claims",
+    "no implemented solver, controller, dataset, or published artefact; the level-0 analytic device models, the analytic-surface device 3D model (composed on the pinned shared geometry kernels) and their timing benchmarks are computational prototypes, not validated performance, confinement or engineering claims",
     "no experimental correlation",
     "no parameter set describes or validates any real machine"
   ],

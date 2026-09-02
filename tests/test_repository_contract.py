@@ -79,17 +79,11 @@ REQUIRED_PATHS = (
     "docs/DEVICE_3D_MODEL_CONTRACT.md",
     "benchmarks/device_model_3d.py",
     "benchmarks/results/device_model_3d.local.json",
-    "rust/src/geometry/mod.rs",
-    "rust/src/geometry/trig.rs",
-    "rust/src/geometry/primitives.rs",
-    "rust/src/geometry/mesh.rs",
     "src/scpn_z_pinch_core/geometry/__init__.py",
-    "src/scpn_z_pinch_core/geometry/trig.py",
-    "src/scpn_z_pinch_core/geometry/mesh.py",
-    "src/scpn_z_pinch_core/geometry/primitives.py",
     "src/scpn_z_pinch_core/geometry/device.py",
     "src/scpn_z_pinch_core/geometry/model.py",
     "src/scpn_z_pinch_core/geometry/export.py",
+    "docs/adr/0007-shared-geometry-kernels.md",
     "reactor-domain.json",
     "requirements-dev.txt",
     "src/scpn_z_pinch_core/__init__.py",
@@ -184,7 +178,43 @@ def test_manifest_declares_exact_configuration_assignment() -> None:
     ]
     assert "analytic_device_physics_models" in manifest["owned_domains"]
     assert "device_geometry_and_3d_model" in manifest["owned_domains"]
+    assert {
+        "domain": "shared_physics_geometry_and_numerics_kernels",
+        "owner": "SCPN-REACTOR-KERNELS",
+    } in manifest["excluded_domains"]
     assert manifest["claims"] == []
+
+
+def test_kernel_library_pin_agrees_with_the_dependency_and_the_package() -> None:
+    """One commit, one version, one inventory digest: manifest, pyproject, package."""
+    import tomllib
+
+    import scpn_reactor_kernels
+
+    manifest = load_json_object(REPO / "reactor-domain.json")
+    pin = manifest["kernel_library"]
+    assert pin["distribution"] == "scpn-reactor-kernels"
+    assert pin["kernels"] == [
+        "geometry_exports",
+        "geometry_mesh_contract",
+        "geometry_primitives",
+        "geometry_unit_circle",
+    ]
+    project = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
+    dependencies = project["project"]["dependencies"]
+    assert dependencies == [
+        "scpn-reactor-kernels @ git+https://github.com/anulum/"
+        f"scpn-reactor-kernels.git@{pin['source_commit']}"
+    ]
+    assert scpn_reactor_kernels.__version__ == pin["version"]
+    workflows = REPO / ".github" / "workflows"
+    for name in ("reusable-static-policy.yml", "reusable-tests.yml", "pre-commit.yml"):
+        text = (workflows / name).read_text(encoding="utf-8")
+        assert "pip install -e ." in text, name
+    native_step = (workflows / "reusable-tests.yml").read_text(encoding="utf-8")
+    assert f"scpn-reactor-kernels.git@{pin['source_commit']}#subdirectory=rust" in (
+        native_step
+    )
 
 
 def test_descriptor_and_inventory_embed_current_manifest_digest() -> None:
