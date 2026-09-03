@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from dataclasses import dataclass, field
 from typing import Any, Final
 
@@ -79,12 +80,16 @@ from scpn_z_pinch_core.geometry.model import (
 CAD_MODEL_SCHEMA: Final = "scpn.z-pinch-cad-model.v1"
 CAD_MODEL_SCHEMA_VERSION: Final = "1.0.0"
 CAD_MODEL_NON_CLAIMS: Final = (
-    "B-rep solids of the same synthetic design, built by the pinned "
-    "third-party OpenCASCADE kernel and checked against the analytic closed "
-    "forms; not an engineering model",
+    (
+        "B-rep solids of the same synthetic design, built by the pinned "
+        "third-party OpenCASCADE kernel and checked against the analytic closed "
+        "forms; not an engineering model"
+    ),
     "no material property, load, field or neutronic quantity is carried",
-    "STEP bytes are deterministic only within one pinned back-end "
-    "environment; identity across OpenCASCADE or gmsh versions is not claimed",
+    (
+        "STEP bytes are deterministic only within one pinned back-end "
+        "environment; identity across OpenCASCADE or gmsh versions is not claimed"
+    ),
     "no value describes or validates any real machine",
 )
 
@@ -281,7 +286,7 @@ class DeviceModelCAD:
             ("linear_deflection_m", self.linear_deflection_m),
             ("angular_deflection_rad", self.angular_deflection_rad),
         ):
-            if not (value > 0.0) or value != value or value == float("inf"):
+            if not math.isfinite(value) or value <= 0.0:
                 raise DeviceGeometryError(
                     f"{name}: must be finite and strictly positive, got {value!r}"
                 )
