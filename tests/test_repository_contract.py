@@ -84,6 +84,11 @@ REQUIRED_PATHS = (
     "src/scpn_z_pinch_core/geometry/model.py",
     "src/scpn_z_pinch_core/geometry/export.py",
     "docs/adr/0007-shared-geometry-kernels.md",
+    "docs/adr/0008-device-cad-model.md",
+    "benchmarks/device_model_cad.py",
+    "benchmarks/results/device_model_cad.local.json",
+    "src/scpn_z_pinch_core/geometry/cad.py",
+    "tests/test_geometry_cad.py",
     "reactor-domain.json",
     "requirements-dev.txt",
     "src/scpn_z_pinch_core/__init__.py",
@@ -175,6 +180,11 @@ def test_manifest_declares_exact_configuration_assignment() -> None:
             "evidence_maturity": "computational_prototype",
             "evidence_pointer": "VALIDATION.md#device-3d-model",
         },
+        {
+            "identifier": "device_cad_model",
+            "evidence_maturity": "computational_prototype",
+            "evidence_pointer": "VALIDATION.md#device-cad-model",
+        },
     ]
     assert "analytic_device_physics_models" in manifest["owned_domains"]
     assert "device_geometry_and_3d_model" in manifest["owned_domains"]
@@ -195,6 +205,9 @@ def test_kernel_library_pin_agrees_with_the_dependency_and_the_package() -> None
     pin = manifest["kernel_library"]
     assert pin["distribution"] == "scpn-reactor-kernels"
     assert pin["kernels"] == [
+        "cad_brep_solids",
+        "cad_faceting",
+        "cad_step_export",
         "geometry_exports",
         "geometry_mesh_contract",
         "geometry_primitives",
@@ -203,7 +216,7 @@ def test_kernel_library_pin_agrees_with_the_dependency_and_the_package() -> None
     project = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
     dependencies = project["project"]["dependencies"]
     assert dependencies == [
-        "scpn-reactor-kernels @ git+https://github.com/anulum/"
+        "scpn-reactor-kernels[cad] @ git+https://github.com/anulum/"
         f"scpn-reactor-kernels.git@{pin['source_commit']}"
     ]
     assert scpn_reactor_kernels.__version__ == pin["version"]
@@ -227,7 +240,7 @@ def test_descriptor_and_inventory_embed_current_manifest_digest() -> None:
     assert descriptor["source"]["manifest_sha256"] == digest
     assert inventory["source"]["manifest_sha256"] == digest
     assert descriptor["lifecycle"]["state"] == "not_federated"
-    assert inventory["implemented_capability_count"] == 4
+    assert inventory["implemented_capability_count"] == 5
 
 
 def test_no_agent_state_trees_exist() -> None:

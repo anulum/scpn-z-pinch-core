@@ -10,9 +10,10 @@ SCPN Z-Pinch Core — Threat model
 
 # Threat model
 
-Scoped to the current `architecture_only` state: the executable surface is
-the validation tooling under `tools/`; the valuable content is the contract
-metadata. The model is revisited whenever a new surface (adapter
+Scoped to the current `computational_prototype` state: the executable
+surface is the package under `src/` and the validation tooling under
+`tools/`; the valuable content is the contract metadata and the exported
+model files. The model is revisited whenever a new surface (adapter
 implementation, solver seam, federation) is added.
 
 ## Assets
@@ -21,6 +22,7 @@ implementation, solver seam, federation) is added.
 |---|---|
 | `reactor-domain.json` | source of project identity; downstream projects bind to it; carries the exact pin of the shared kernel library (`kernel_library`) |
 | Pinned kernel library (`scpn-reactor-kernels` at one commit object) | every vertex of the 3D model and every export byte come from it; a substituted or drifted library would change numerics silently |
+| Pinned CAD back-end (OpenCASCADE through the library's `cad` extra) | the B-rep solids and the STEP bytes come from third-party C++; a version drift changes the export bytes silently unless detected |
 | `studio/portfolio-descriptor.json` | what the portfolio layer would ingest; must never overstate maturity |
 | `capability-inventory.json` | public truthfulness of "zero implemented capabilities" |
 | `docs/CONTROL_ADAPTER_SPECIFICATION.md` | safety-relevant contract text (no-direct-actuation semantics) |
@@ -52,6 +54,8 @@ implementation, solver seam, federation) is added.
 | Workflow tampering towards write authority | scaffold contains no write-authority workflow; permissions are empty at top level; action references must be 40-hex commit objects (shared Tier-0 audit enforces) |
 | Dependency substitution | exact version pins; dependabot updates land only through the full gate sequence |
 | Re-pinning the kernel library silently or inconsistently | the manifest, the `pyproject.toml` dependency, the installed package version and the CI install steps must name one commit object (contract test); the validator enforces the 40-hex commit, the 64-hex inventory digest and the consumed kernel identifiers; parity against the library's native module runs in CI |
+| Presenting the STEP export as an engineering model or a drawing | the CAD record carries fixed non-claims and per-body evidence bounds; the contract document states the file is an export of the record, never a source; determinism is claimed only within the pinned back-end environment, whose versions the record carries |
+| CAD back-end version drift | the back-end versions are pinned by the library's `cad` extra and recorded in the CAD record; a pinned reference digest in the tests fails on any byte drift, and a version bump is a governed data change (re-pinned digests) |
 | Secret introduction | no secrets exist or are needed; security-audit workflow and review gates scan the diff |
 
 ## Fail-closed behaviour

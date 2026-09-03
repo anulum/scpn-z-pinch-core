@@ -9,16 +9,18 @@
 """Device capability models of the SCPN z-pinch device family.
 
 Public surface of the ``device_configuration_model``,
-``diagnostic_clock_semantics``, ``level0_device_physics`` and
-``device_3d_model`` capabilities at ``computational_prototype`` maturity:
-validated parameter objects, synthetic diagnostic and clock declarations
-aligned with the pinned SPO observability catalogue, documented
-consistency estimates, four cited closed-form level-0 physics models
-evaluated on the validated configuration, a validated device geometry
-with a deterministic tier-G1 3D model built on the pinned shared kernel
-library and open-format exports, canonical serialisation with SHA-256
-digests, and data-only pins to the SPO registries. No claim about any
-real machine or diagnostic is made anywhere in this package.
+``diagnostic_clock_semantics``, ``level0_device_physics``,
+``device_3d_model`` and ``device_cad_model`` capabilities at
+``computational_prototype`` maturity: validated parameter objects,
+synthetic diagnostic and clock declarations aligned with the pinned SPO
+observability catalogue, documented consistency estimates, four cited
+closed-form level-0 physics models evaluated on the validated
+configuration, a validated device geometry with a deterministic tier-G1
+3D model built on the pinned shared kernel library and open-format
+exports, the tier-G2 B-rep CAD model of the same design with a
+normalised deterministic STEP export, canonical serialisation with
+SHA-256 digests, and data-only pins to the SPO registries. No claim
+about any real machine or diagnostic is made anywhere in this package.
 """
 
 from __future__ import annotations
@@ -41,13 +43,22 @@ from scpn_z_pinch_core.errors import (
 )
 from scpn_z_pinch_core.geometry import (
     BODY_NAMES,
+    CAD_MODEL_NON_CLAIMS,
+    CAD_MODEL_SCHEMA,
+    CAD_MODEL_SCHEMA_VERSION,
+    DEFAULT_ANGULAR_DEFLECTION_RAD,
+    DEFAULT_LINEAR_DEFLECTION_M,
+    DEFAULT_REFERENCE_MESH_SEGMENTS,
     GEOMETRY_FIELDS,
     MODEL_NON_CLAIMS,
     MODEL_SCHEMA,
     MODEL_SCHEMA_VERSION,
     MODEL_UNITS,
+    BodyCADEvidence,
     DeviceGeometry,
     DeviceModel3D,
+    DeviceModelCAD,
+    build_device_cad,
     build_device_model,
     geometry_from_bytes,
     geometry_from_record,
@@ -55,6 +66,7 @@ from scpn_z_pinch_core.geometry import (
     glb_extras,
     stl_bytes,
     write_glb,
+    write_step,
     write_stl,
 )
 from scpn_z_pinch_core.observability import (
@@ -119,7 +131,13 @@ __all__ = [
     "APPLICABLE_CANDIDATES",
     "BENNETT_WINDOW_EV",
     "BODY_NAMES",
+    "CAD_MODEL_NON_CLAIMS",
+    "CAD_MODEL_SCHEMA",
+    "CAD_MODEL_SCHEMA_VERSION",
     "CATALOGUE_BINDING",
+    "DEFAULT_ANGULAR_DEFLECTION_RAD",
+    "DEFAULT_LINEAR_DEFLECTION_M",
+    "DEFAULT_REFERENCE_MESH_SEGMENTS",
     "DEUTERON_MASS_KG",
     "ELEMENTARY_CHARGE_C",
     "GEOMETRY_FIELDS",
@@ -136,6 +154,7 @@ __all__ = [
     "PROTON_MASS_KG",
     "SHUMLAK_HARTMAN_COEFFICIENT",
     "BennettEquilibrium",
+    "BodyCADEvidence",
     "CandidateProfile",
     "ClockKind",
     "ClockModel",
@@ -147,6 +166,7 @@ __all__ = [
     "DeviceGeometry",
     "DeviceGeometryError",
     "DeviceModel3D",
+    "DeviceModelCAD",
     "DiagnosticChannelPlan",
     "DiagnosticPlan",
     "DiagnosticPlanError",
@@ -167,6 +187,7 @@ __all__ = [
     "ShearAssessment",
     "__version__",
     "bennett_equilibrium",
+    "build_device_cad",
     "build_device_model",
     "configuration_from_bytes",
     "configuration_from_record",
@@ -189,5 +210,6 @@ __all__ = [
     "stl_bytes",
     "verify_envelope",
     "write_glb",
+    "write_step",
     "write_stl",
 ]

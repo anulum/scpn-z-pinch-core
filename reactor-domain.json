@@ -19,6 +19,11 @@
       "evidence_maturity": "computational_prototype",
       "evidence_pointer": "VALIDATION.md#device-3d-model",
       "identifier": "device_3d_model"
+    },
+    {
+      "evidence_maturity": "computational_prototype",
+      "evidence_pointer": "VALIDATION.md#device-cad-model",
+      "identifier": "device_cad_model"
     }
   ],
   "claims": [],
@@ -84,14 +89,17 @@
   },
   "kernel_library": {
     "distribution": "scpn-reactor-kernels",
-    "inventory_sha256": "b065c46b9f54d478d94be5cfeb61e1300b4ddae47e57f3992a985adfb2cb5dbf",
+    "inventory_sha256": "403c1a4149f710c39a909228edbc6e8ce8ee103745f88f47cdd3a8e7008d8e32",
     "kernels": [
+      "cad_brep_solids",
+      "cad_faceting",
+      "cad_step_export",
       "geometry_exports",
       "geometry_mesh_contract",
       "geometry_primitives",
       "geometry_unit_circle"
     ],
-    "source_commit": "6f574bfdddadf24c6a4c0a020c0a257fec38231a",
+    "source_commit": "706a5979450c06432b17f080ecfa9d7cebaa435f",
     "version": "0.1.0.dev0"
   },
   "license": "AGPL-3.0-or-later",
@@ -104,7 +112,7 @@
     "not safety-certified",
     "not autonomous-plant-ready",
     "not commercially reactor-ready",
-    "no implemented solver, controller, dataset, or published artefact; the level-0 analytic device models, the analytic-surface device 3D model (composed on the pinned shared geometry kernels) and their timing benchmarks are computational prototypes, not validated performance, confinement or engineering claims",
+    "no implemented solver, controller, dataset, or published artefact; the level-0 analytic device models, the analytic-surface device 3D model, the B-rep CAD model of the same design (built by the pinned third-party OpenCASCADE kernel, checked against the analytic closed forms, STEP deterministic only within the pinned back-end environment) and their timing benchmarks are computational prototypes, not validated performance, confinement or engineering claims",
     "no experimental correlation",
     "no parameter set describes or validates any real machine"
   ],

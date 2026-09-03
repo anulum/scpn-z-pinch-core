@@ -31,6 +31,7 @@ from scpn_reactor_kernels.geometry import (
 from scpn_reactor_kernels.geometry import glb_bytes as _library_glb_bytes
 from scpn_reactor_kernels.geometry import stl_bytes as _library_stl_bytes
 
+from scpn_z_pinch_core.geometry.cad import DeviceModelCAD
 from scpn_z_pinch_core.geometry.model import DeviceModel3D
 
 __all__ = [
@@ -40,6 +41,7 @@ __all__ = [
     "glb_extras",
     "stl_bytes",
     "write_glb",
+    "write_step",
     "write_stl",
 ]
 
@@ -138,3 +140,25 @@ def write_glb(path: Path, model: DeviceModel3D) -> int:
         Number of bytes written.
     """
     return path.write_bytes(glb_bytes(model))
+
+
+def write_step(path: Path, model: DeviceModelCAD) -> int:
+    """Write the normalised STEP document of a device CAD model.
+
+    The bytes written are exactly the digested bytes the model record
+    carries (``model.step_sha256``); the header is the library's
+    normalised deterministic header (ADR 0008).
+
+    Parameters
+    ----------
+    path
+        Destination file.
+    model
+        Validated device CAD model.
+
+    Returns
+    -------
+    int
+        Number of bytes written.
+    """
+    return path.write_bytes(model.step_data)

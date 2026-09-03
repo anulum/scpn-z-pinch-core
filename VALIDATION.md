@@ -342,3 +342,64 @@ Bounded claims — what is NOT claimed:
 - Exporting STL and GLB files does not federate, present or gate this
   repository anywhere; the portfolio layer keeps that authority.
 - Maturity stays `computational_prototype`.
+
+## Device CAD model
+
+Evidence record of the `device_cad_model` capability
+(`computational_prototype`; design record: `docs/adr/0008-device-cad-model.md`;
+the STEP surface of the consumer contract `docs/DEVICE_3D_MODEL_CONTRACT.md`).
+
+The B-rep, STEP and faceting kernels are the shared library's `cad` group
+(`scpn-reactor-kernels` pinned in the manifest `kernel_library` block and
+in `pyproject.toml` with the `cad` extra); their evidence (analytic
+agreement, determinism, deficit bounds, refusals) is the library's, at its
+`VALIDATION.md#cad-kernels`. What this repository exercises, all under the
+100 % statement-and-branch coverage gate
+(`src/scpn_z_pinch_core/geometry/cad.py`, `tests/test_geometry_cad.py`):
+
+- **Same design, same bodies**: the six B-rep bodies are built at the
+  names, roles, material tokens and extents of the tier-G1 model, proven
+  by an inventory comparison against `build_device_model`.
+- **B-rep measures against the analytic closed forms**: every body's
+  OpenCASCADE volume and surface area agree with the analytic cylinder or
+  tube forms within the library's measure tolerance `1e-9` relative
+  (measured `0` to `1.8e-15` in the reference environment), fail-closed by
+  construction of the record.
+- **Faceting evidence**: every body faceted at the declared deflections
+  (linear `1e-4 m`, angular `0.1 rad`) validates as a closed,
+  outward-oriented mesh of the G1 contract; the faceted volume deficit
+  against the analytic form stays within the declared bound `2 d / r`
+  (measured `6.6e-5` to `2.6e-4` against bounds `1.3e-3` to `2.0e-2`), and
+  the faceted volume agrees with the G1 reference mesh at the declared
+  eight segments within the exact polygon-deficit bound `0.0997`
+  (measured `9.94e-2` to `9.96e-2`).
+- **STEP export**: the written file is exactly the byte string whose
+  SHA-256 the record carries as `step_sha256`; two builds of the same
+  design are byte-identical in the pinned back-end environment; a
+  re-import in a separate reader process reproduces every body volume
+  within `1e-9`.
+- **Record**: `scpn.z-pinch-cad-model.v1` `1.0.0` with canonical bytes,
+  SHA-256 digest and fixed non-claims; one pinned reference digest in the
+  reference back-end environment (cadquery 2.8.0, OCP 7.9.3.1) as an
+  immutability fixture; invalid segments, invalid deflections, a foreign
+  body inventory, a foreign manifest schema and a malformed STEP digest
+  are refused; the column containment invariants of the G1 build are
+  enforced on the same path.
+- **Benchmark**: `benchmarks/device_model_cad.py` per the ecosystem
+  benchmark standard (build, export, facet and full record build);
+  results in `docs/benchmarks.md` and the committed local artefact
+  `benchmarks/results/device_model_cad.local.json`.
+
+Bounded claims — what is NOT claimed:
+
+- The bodies are exact analytic solids of a synthetic design built by a
+  pinned third-party kernel: not an engineering model, no equilibrium
+  boundary, no manufacturing drawing; the plasma body is the
+  configuration's column.
+- Determinism of the STEP bytes is claimed within the pinned back-end
+  environment only; identity across OpenCASCADE or gmsh versions is not
+  claimed, and a back-end bump re-pins the record digest as a governed
+  data change.
+- No value describes, approximates or validates any real machine; the
+  benchmark measures build, export and faceting cost, not physics.
+- Maturity stays `computational_prototype`.

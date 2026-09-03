@@ -22,7 +22,7 @@ dynamic = ["version"]
 # kernel inventory are recorded in reactor-domain.json (kernel_library) and
 # a contract test proves the two pins agree.
 dependencies = [
-    "scpn-reactor-kernels @ git+https://github.com/anulum/scpn-reactor-kernels.git@6f574bfdddadf24c6a4c0a020c0a257fec38231a",
+    "scpn-reactor-kernels[cad] @ git+https://github.com/anulum/scpn-reactor-kernels.git@706a5979450c06432b17f080ecfa9d7cebaa435f",
 ]
 
 [tool.setuptools.dynamic]
@@ -62,6 +62,11 @@ select = [
 [tool.ruff.lint.per-file-ignores]
 # assert is the pytest contract surface
 "tests/*" = ["S101"]
+# the STEP round trip re-imports the export in a separate reader process
+# (the consumer scenario): a fixed argument vector with the test's own
+# interpreter and a tmp_path file, without a shell and without untrusted
+# input (scope of S603)
+"tests/test_geometry_cad.py" = ["S101", "S603"]
 # preflight executes fixed argument vectors of repository gates without a
 # shell and without untrusted input (scope of S603/S607)
 "tools/preflight.py" = ["S603", "S607"]
@@ -69,6 +74,7 @@ select = [
 # through shutil.which, without a shell and without untrusted input
 "benchmarks/level0_physics.py" = ["S603"]
 "benchmarks/device_model_3d.py" = ["S603"]
+"benchmarks/device_model_cad.py" = ["S603"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

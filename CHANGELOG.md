@@ -12,6 +12,23 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ## [Unreleased]
 
+### Added
+
+- Device CAD model (`src/scpn_z_pinch_core/geometry/cad.py`, capability
+  `device_cad_model`, ADR 0008): the six device bodies as B-rep solids
+  built by the pinned OpenCASCADE kernel through the shared library's
+  `cad` group (kernels `cad_brep_solids`, `cad_step_export`,
+  `cad_faceting`), a canonical `DeviceModelCAD` record
+  (`scpn.z-pinch-cad-model.v1`) with per-body fail-closed evidence
+  (B-rep against analytic closed forms within `1e-9`, faceting within the
+  declared deflection and polygon-deficit bounds against the tier-G1
+  reference mesh), a normalised deterministic STEP export written by
+  `write_step` and digested into the record with the back-end versions,
+  and a standard-conformant benchmark
+  (`benchmarks/device_model_cad.py`). The kernel-library pin moves to the
+  commit carrying the `cad` group; the dependency gains the `cad` extra;
+  the CI gains a `cad` job.
+
 ### Changed
 
 - The device 3D model consumes the shared geometry kernels of

@@ -42,6 +42,11 @@ CAPABILITIES = [
         "evidence_maturity": "computational_prototype",
         "evidence_pointer": "VALIDATION.md#device-3d-model",
     },
+    {
+        "identifier": "device_cad_model",
+        "evidence_maturity": "computational_prototype",
+        "evidence_pointer": "VALIDATION.md#device-cad-model",
+    },
 ]
 
 
@@ -51,7 +56,7 @@ def test_inventory_reports_exact_capability_set() -> None:
     assert inventory["schema"] == "scpn.capability-inventory.v1"
     assert inventory["project"] == "SCPN-Z-PINCH-CORE"
     assert inventory["evidence_maturity"] == "computational_prototype"
-    assert inventory["implemented_capability_count"] == 4
+    assert inventory["implemented_capability_count"] == 5
     assert inventory["capabilities"] == CAPABILITIES
     assert inventory["claims"] == []
     assert inventory["source"]["manifest_sha256"] == sha256_of_file(MANIFEST)

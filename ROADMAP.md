@@ -61,8 +61,18 @@ this repository until it appears in the capability inventory with evidence.
   the serialisers are consumed from the shared kernel library
   `scpn-reactor-kernels`, pinned by commit object and inventory digest
   (ADR 0007), and the model is proven bit-exact against that library's
-  native module. Follow-ups under the same capability: B-rep CAD solids (a
-  separate tooling decision), coil and pulsed-power layouts, and mesh
+  native module.
+- **Device CAD model** (landed 2026-09-03) — the same six bodies as B-rep
+  solids built by the pinned OpenCASCADE kernel through the library's
+  `cad` group, a fail-closed per-body evidence record (B-rep against the
+  analytic closed forms within `1e-9`, faceting within the declared
+  deflection and polygon-deficit bounds against the tier-G1 mesh), a
+  normalised deterministic STEP export digested into the canonical
+  `DeviceModelCAD` record (`scpn.z-pinch-cad-model.v1`), and a
+  standard-conformant benchmark; `computational_prototype` (ADR 0008,
+  `VALIDATION.md#device-cad-model`). Follow-ups under the same
+  capability: coil and pulsed-power layouts, torus-segment and
+  sphere-shell bodies once the library lands those primitives, and mesh
   contracts for the engineering lanes.
 
 ## Planned (no implementation exists; ordering is not a commitment)

@@ -10,8 +10,9 @@ SCPN Z-Pinch Core — Device 3D model contract
 
 # Device 3D model contract
 
-Producer-owned contract of the `device_3d_model` capability
-(`computational_prototype`; design record ADR 0006). It states exactly
+Producer-owned contract of the `device_3d_model` and `device_cad_model`
+capabilities (`computational_prototype`; design records ADR 0006, ADR 0007
+and ADR 0008). It states exactly
 what the exported files contain so that a consumer — the portfolio
 presentation layer, an engineering tool, a reviewer — can read them
 without importing this package. Nothing in the files or in this contract
@@ -80,6 +81,24 @@ Segment counts are multiples of eight (at least eight).
   `configuration_digest_sha256`, `geometry_digest_sha256`, `model_sha256`,
   `segments`, `units` and `non_claims`. No materials, textures, animations
   or extensions are used.
+- **STEP** (`write_step`, capability `device_cad_model`, ADR 0008): an ISO
+  10303-21 (AP214) export of the B-rep assembly of the SAME six bodies,
+  built by the pinned OpenCASCADE kernel through the shared library's
+  `cad` group. The header is normalised by the library: the `FILE_NAME`
+  name and time stamp are fixed literals, the assembly usage-occurrence
+  identifiers are renumbered from one, the writer's continuation lines are
+  unfolded, and `FILE_DESCRIPTION` carries the generator name and the
+  provenance extras (record schema, both source digests, the assembly
+  manifest digest, the units and the non-claims) as a JSON string. The
+  file written is exactly the byte string whose SHA-256 the CAD model
+  record carries as `step_sha256`, next to the back-end versions; the
+  bytes are deterministic within one pinned back-end environment and no
+  identity across OpenCASCADE versions is claimed. The CAD model record
+  additionally carries, per body, the B-rep volume and area against the
+  analytic closed form within `1e-9` relative, the faceted volume deficit
+  within the declared bound `2 d / r`, and the faceted volume against the
+  G1 mesh at the declared reference segment count within the exact
+  polygon-deficit bound.
 
 ## Determinism
 

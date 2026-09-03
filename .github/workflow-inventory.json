@@ -31,7 +31,7 @@
       "file": "reusable-tests.yml",
       "kind": "reusable",
       "category": 4,
-      "jobs": ["run", "rust"],
+      "jobs": ["run", "rust", "cad"],
       "owner": "unit, component, scientific quality, native parity and benchmark smoke"
     },
     {

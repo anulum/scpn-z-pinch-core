@@ -6,21 +6,35 @@
 # Contact: www.anulum.li | protoscience@anulum.li
 # SCPN Z-Pinch Core — device geometry and 3D model
 
-"""Device geometry and tier-G1 3D model of the z-pinch family.
+"""Device geometry, tier-G1 3D model and tier-G2 CAD model of the family.
 
 A validated device geometry, the composed device model record of six
-analytic bodies, and the device-side provenance of the open-format
-exports (binary STL, glTF 2.0 binary). The unit circle, the tessellation
-primitives, the closed-mesh contract and the serialisers are consumed
-from the pinned shared kernel library ``scpn_reactor_kernels`` (ADR
-0007); the mesh type of every body is that library's ``TriangleMesh``.
-Every body is an analytic surface of a synthetic design; nothing here is
-a CAD solid, an equilibrium boundary or an engineering model, and no
-value describes a real machine. Design records: ADR 0006, ADR 0007.
+analytic bodies, the composed device CAD model record of the same six
+bodies as B-rep solids on the pinned third-party OpenCASCADE kernel, and
+the device-side provenance of the open-format exports (binary STL, glTF
+2.0 binary, STEP). The unit circle, the tessellation primitives, the
+closed-mesh contract, the serialisers and the B-rep, STEP and faceting
+kernels are consumed from the pinned shared kernel library
+``scpn_reactor_kernels`` (ADR 0007, ADR 0008); the mesh type of every
+body is that library's ``TriangleMesh``. Every body is a synthetic
+design surface or solid; nothing here is an equilibrium boundary or an
+engineering model, and no value describes a real machine. Design
+records: ADR 0006, ADR 0007, ADR 0008.
 """
 
 from __future__ import annotations
 
+from scpn_z_pinch_core.geometry.cad import (
+    CAD_MODEL_NON_CLAIMS,
+    CAD_MODEL_SCHEMA,
+    CAD_MODEL_SCHEMA_VERSION,
+    DEFAULT_ANGULAR_DEFLECTION_RAD,
+    DEFAULT_LINEAR_DEFLECTION_M,
+    DEFAULT_REFERENCE_MESH_SEGMENTS,
+    BodyCADEvidence,
+    DeviceModelCAD,
+    build_device_cad,
+)
 from scpn_z_pinch_core.geometry.device import (
     GEOMETRY_FIELDS,
     DeviceGeometry,
@@ -34,6 +48,7 @@ from scpn_z_pinch_core.geometry.export import (
     glb_extras,
     stl_bytes,
     write_glb,
+    write_step,
     write_stl,
 )
 from scpn_z_pinch_core.geometry.model import (
@@ -48,6 +63,12 @@ from scpn_z_pinch_core.geometry.model import (
 
 __all__ = [
     "BODY_NAMES",
+    "CAD_MODEL_NON_CLAIMS",
+    "CAD_MODEL_SCHEMA",
+    "CAD_MODEL_SCHEMA_VERSION",
+    "DEFAULT_ANGULAR_DEFLECTION_RAD",
+    "DEFAULT_LINEAR_DEFLECTION_M",
+    "DEFAULT_REFERENCE_MESH_SEGMENTS",
     "GEOMETRY_FIELDS",
     "GLTF_GENERATOR",
     "MODEL_NON_CLAIMS",
@@ -55,8 +76,11 @@ __all__ = [
     "MODEL_SCHEMA_VERSION",
     "MODEL_UNITS",
     "STL_HEADER",
+    "BodyCADEvidence",
     "DeviceGeometry",
     "DeviceModel3D",
+    "DeviceModelCAD",
+    "build_device_cad",
     "build_device_model",
     "geometry_from_bytes",
     "geometry_from_record",
@@ -64,5 +88,6 @@ __all__ = [
     "glb_extras",
     "stl_bytes",
     "write_glb",
+    "write_step",
     "write_stl",
 ]
