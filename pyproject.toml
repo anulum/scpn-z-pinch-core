@@ -89,6 +89,7 @@ known-first-party = [
     "generate_capability_inventory",
     "preflight",
     "geometry_fixtures",
+    "observability_fixtures",
 ]
 
 [tool.mypy]
