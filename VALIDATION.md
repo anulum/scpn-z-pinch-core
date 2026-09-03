@@ -27,7 +27,7 @@ followed by the evidence record of each implemented capability.
 | Licensing | `reuse lint` | REUSE 3.x compliance of the full tree |
 | Workflow lint | `actionlint` | all files under `.github/workflows/` |
 | Workflow modularity | `python3 tools/audit_workflows.py` | distributed workflow inventory: single ownership per job, coordinator/gate contract, action pinning, size ceilings |
-| Native kernels | `make rust` (`cargo fmt --check`, `cargo clippy --all-targets --features python -- -D warnings`, `cargo test` in `rust/`) | formatting, lints with warnings denied, kernel unit tests |
+| Native kernels | `make rust` (`cargo fmt --check`, `cargo clippy --all-targets --features python -- -D warnings`, `cargo doc --no-deps --features python`, `cargo test` in `rust/`) | formatting, lints with warnings denied, rustdoc coverage of the public surface (denied at the compiler), kernel unit tests |
 | Native parity | `pytest -q tests/test_physics_native_parity.py tests/test_geometry_native_parity.py` (the second file needs the pinned library's native module) | bit-exact float64 agreement of every native kernel (physics and geometry) with the Python floor (skipped hermetically when the optional native module is absent) |
 | Documentation | `python3 tools/preflight.py --only docs` | UTF-8 readability and relative-link integrity of every Markdown file |
 | Orchestrated | `python3 tools/preflight.py` | fail-closed run of all gates above |

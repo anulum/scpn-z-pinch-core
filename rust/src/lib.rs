@@ -25,7 +25,9 @@ pub mod pease_braginskii;
 pub mod sheared_flow;
 pub mod stability;
 
+/// Vacuum permeability in henries per metre (exact by the SI definition).
 pub const MU0: f64 = 4.0e-7 * std::f64::consts::PI;
+/// Elementary charge in coulombs (exact by the SI definition).
 pub const ELEMENTARY_CHARGE_C: f64 = 1.602_176_634e-19;
 
 #[cfg(feature = "python")]

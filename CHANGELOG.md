@@ -28,6 +28,11 @@ SCPN Z-Pinch Core — CHANGELOG
   (`benchmarks/device_model_cad.py`). The kernel-library pin moves to the
   commit carrying the `cad` group; the dependency gains the `cad` extra;
   the CI gains a `cad` job.
+- Native surface documentation gate: the crate denies `missing_docs`,
+  `missing_debug_implementations` and `unsafe_code` plus the rustdoc
+  link and code-block lints, and `cargo doc --no-deps --features python`
+  runs in the local `rust` gate and the hosted `rust` job; the two
+  public constants carry their rustdoc.
 
 ### Changed
 

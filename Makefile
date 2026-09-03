@@ -32,7 +32,7 @@ validate:
 	$(PYTHON) tools/generate_capability_inventory.py --check
 
 rust:
-	cd rust && cargo fmt --check && cargo clippy --all-targets --features python -- -D warnings && cargo test
+	cd rust && cargo fmt --check && cargo clippy --all-targets --features python -- -D warnings && cargo doc --no-deps --features python && cargo test
 
 docs:
 	$(PYTHON) tools/preflight.py --only docs
