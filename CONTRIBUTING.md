@@ -10,16 +10,19 @@ SCPN Z-Pinch Core — CONTRIBUTING
 
 # Contributing
 
-The repository is currently local-first and architecture-only; there is no
-public hosting yet. Until a remote exists, contributions are coordinated
-directly with the owner (protoscience@anulum.li).
+The repository is public and its gates run in CI on every push.
+Contributions are coordinated directly with the owner
+(protoscience@anulum.li).
 
 ## Ground rules
 
-1. **Truthful maturity.** The project is `architecture_only`. Do not add
-   placeholder APIs, toy solvers, fabricated data, empty tests, readiness
-   language, or any capability or claim entry without the evidence the
-   reactor family standard requires for the target maturity state.
+1. **Truthful maturity.** `reactor-domain.json` declares the evidence
+   maturity and is the only place it is written; this file does not repeat
+   it, because a value kept in two places goes stale in one of them. Do not
+   add placeholder APIs, toy solvers, fabricated data, empty tests,
+   readiness language, or any capability or claim entry without the
+   evidence the reactor family standard requires for the maturity the
+   manifest declares.
 2. **Boundary discipline.** Work stays inside the Z-pinch device boundary.
    Solver mathematics belongs to `SCPN-FUSION-CORE`; typed semantics to
    `SCPN-PHASE-ORCHESTRATOR`; control admission to `SCPN-CONTROL`;
