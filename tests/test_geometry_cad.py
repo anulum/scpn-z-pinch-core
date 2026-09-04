@@ -49,8 +49,17 @@ from scpn_z_pinch_core.parameters import PinchColumn
 #: Digest of the reference CAD model record in the pinned back-end
 #: environment (cadquery 2.8.0, OCP 7.9.3.1); a back-end bump re-pins it
 #: as a governed data change (ADR 0008).
+#:
+#: Re-pinned when the kernel-library pin moved to the commit that takes a
+#: body's bounding box from the geometry rather than from its facets. The
+#: shapes are unchanged: the box values in the assembly manifest lost the
+#: mesher's deflection, the manifest digest moved with them, and the STEP
+#: document embeds that digest, so the record digest moved too. The old
+#: value was reproduced under the new library by substituting the old
+#: manifest digest into the document extras, which leaves that chain as
+#: the only cause.
 REFERENCE_CAD_MODEL_SHA256 = (
-    "73688d3e214a72cee7a5fbcd2d4fd9a561dd94a9b642f11a5ce9b568dfbd5b9a"
+    "b3e20f50b80760bbe1da8378c56e430cb30cd54c538fc77dca2d080c130c2452"
 )
 
 # Analytic body volumes in the shared library's exact operation order

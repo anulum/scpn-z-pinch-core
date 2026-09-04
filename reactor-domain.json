@@ -89,7 +89,7 @@
   },
   "kernel_library": {
     "distribution": "scpn-reactor-kernels",
-    "inventory_sha256": "403c1a4149f710c39a909228edbc6e8ce8ee103745f88f47cdd3a8e7008d8e32",
+    "inventory_sha256": "8b409c63435088f2e36d66322ec7a379243474bf8b99856100e8fc4c8add679a",
     "kernels": [
       "cad_brep_solids",
       "cad_faceting",
@@ -99,7 +99,7 @@
       "geometry_primitives",
       "geometry_unit_circle"
     ],
-    "source_commit": "706a5979450c06432b17f080ecfa9d7cebaa435f",
+    "source_commit": "98e6de5139f8856f5d50b4ac86f531b7dc38c1dc",
     "version": "0.1.0.dev0"
   },
   "license": "AGPL-3.0-or-later",
