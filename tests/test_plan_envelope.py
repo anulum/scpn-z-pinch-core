@@ -42,7 +42,7 @@ from scpn_z_pinch_core.plan_envelope import (
 )
 
 FIXTURE = Path(__file__).parent / "data" / "plan_envelope_fixture.json"
-FIXTURE_SHA256 = "4d4ff906e93173ff4f43fb8971a2d6bc607110a0ba2e23a4572514287302fd22"
+FIXTURE_SHA256 = "b7f93462fa224ec2a012b4275065393e03ff63060b1d1c64318dedbe81639267"
 
 
 def fixture_document() -> dict[str, Any]:
