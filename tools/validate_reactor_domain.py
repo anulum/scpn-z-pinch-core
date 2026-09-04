@@ -15,12 +15,10 @@ state, no adapter implementation, empty solver seams), the per-state
 capability rules (empty at ``architecture_only``; the ratified item shape
 with resolvable evidence pointers and the ADR 0002 ceiling rule at every
 implemented state), the review-only SPO profile, the no-direct-actuation
-adapter boundary, the machine-protection final-veto declaration, and the
-optional shared-kernel-library pin (``kernel_library``: distribution,
-version, source commit, inventory digest and the consumed kernel
-identifiers, all exact). With ``--map`` it additionally proves exact
-agreement with the portfolio machine map: project membership, the assigned
-configuration set, and the pinned source-registry version and digest.
+adapter boundary, and the machine-protection final-veto declaration. With
+``--map`` it additionally proves exact agreement with the portfolio machine
+map: project membership, the assigned configuration set, and the pinned
+source-registry version and digest.
 """
 
 from __future__ import annotations
@@ -47,9 +45,30 @@ EVIDENCE_STATES: Final = (
 )
 HEX_DIGEST: Final = re.compile(r"^[0-9a-f]{64}$")
 IDENTIFIER: Final = re.compile(r"^[a-z][a-z0-9_]*$")
+#: Namespaced registry extension identifier (``namespace.part:name``), the
+#: form the SPO registry admits for extensions beyond its built-ins.
+NAMESPACED_IDENTIFIER: Final = re.compile(
+    r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*:[a-z][a-z0-9_]*$"
+)
 COMMIT_OBJECT: Final = re.compile(r"^[0-9a-f]{40}$")
+PEP440_VERSION: Final = re.compile(
+    r"^(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*)){2}"
+    r"(?:(?:a|b|rc)(?:0|[1-9]\d*))?"
+    r"(?:\.post(?:0|[1-9]\d*))?"
+    r"(?:\.dev(?:0|[1-9]\d*))?"
+    r"(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?$"
+)
+FAMILY_MAP_SCHEMA_VERSION: Final = "1.1.0"
+KERNEL_LIBRARY_DISTRIBUTION: Final = "scpn-reactor-kernels"
 KERNEL_LIBRARY_FIELDS: Final = frozenset(
     {"distribution", "version", "source_commit", "inventory_sha256", "kernels"}
+)
+KERNEL_OWNER: Final = "SCPN-REACTOR-KERNELS"
+KERNEL_UMBRELLA_DOMAIN: Final = "shared_physics_geometry_and_numerics_kernels"
+KERNEL_LIBRARY_BOUNDARY: Final = (
+    "Shared physics, geometry, numerics, CAD, and meshing kernels; non-device "
+    "library with zero SPO configuration assignments and no solver, control, "
+    "safety, or machine-protection authority."
 )
 
 
@@ -107,7 +126,10 @@ def _validate_configurations(
         return []
     result: list[str] = []
     for item in value:
-        if not isinstance(item, str) or IDENTIFIER.fullmatch(item) is None:
+        if not isinstance(item, str) or (
+            IDENTIFIER.fullmatch(item) is None
+            and NAMESPACED_IDENTIFIER.fullmatch(item) is None
+        ):
             findings.append(f"configurations: invalid identifier {item!r}")
             continue
         result.append(item)
@@ -337,35 +359,45 @@ def _validate_registry_pin(
     return version, digest
 
 
+def _kernel_owner_exclusions(manifest: dict[str, Any]) -> list[Any]:
+    """Return exclusions that name the shared-kernel umbrella domain."""
+    excluded = manifest.get("excluded_domains")
+    if not isinstance(excluded, list):
+        return []
+    return [
+        entry
+        for entry in excluded
+        if isinstance(entry, dict) and entry.get("domain") == KERNEL_UMBRELLA_DOMAIN
+    ]
+
+
 def _validate_kernel_library(manifest: dict[str, Any], findings: list[str]) -> None:
-    """Validate the optional pin of the shared kernel library.
-
-    A repository that consumes ``scpn-reactor-kernels`` records the exact
-    distribution, version, source commit object and kernel-inventory digest
-    it depends on, plus the sorted identifiers of the kernels it consumes;
-    every field is exact and no other field is admitted. Absence of the
-    block is valid (the repository consumes no shared kernel).
-
-    Parameters
-    ----------
-    manifest
-        Decoded manifest object.
-    findings
-        Mutable finding sink.
-    """
+    """Validate the optional immutable shared-kernel pin and owner exclusion."""
+    exclusions = _kernel_owner_exclusions(manifest)
     if "kernel_library" not in manifest:
+        if exclusions:
+            findings.append(
+                "excluded_domains: shared-kernel owner exclusion requires "
+                "a kernel_library pin"
+            )
         return
     pin = manifest["kernel_library"]
     if not isinstance(pin, dict):
         findings.append("kernel_library: must be an object")
         return
+    missing = sorted(KERNEL_LIBRARY_FIELDS - set(pin))
+    if missing:
+        findings.append(f"kernel_library: missing fields {missing!r}")
     unknown = sorted(set(pin) - KERNEL_LIBRARY_FIELDS)
     if unknown:
         findings.append(f"kernel_library: unknown fields {unknown!r}")
-    for key in ("distribution", "version"):
-        value = pin.get(key)
-        if not isinstance(value, str) or not value:
-            findings.append(f"kernel_library.{key}: must be a non-empty string")
+    if pin.get("distribution") != KERNEL_LIBRARY_DISTRIBUTION:
+        findings.append(
+            f"kernel_library.distribution: must be {KERNEL_LIBRARY_DISTRIBUTION!r}"
+        )
+    version = pin.get("version")
+    if not isinstance(version, str) or PEP440_VERSION.fullmatch(version) is None:
+        findings.append("kernel_library.version: invalid governed PEP 440 version")
     commit = pin.get("source_commit")
     if not isinstance(commit, str) or COMMIT_OBJECT.fullmatch(commit) is None:
         findings.append("kernel_library.source_commit: must be a 40-hex commit object")
@@ -378,15 +410,65 @@ def _validate_kernel_library(manifest: dict[str, Any], findings: list[str]) -> N
     kernels = pin.get("kernels")
     if not isinstance(kernels, list) or not kernels:
         findings.append("kernel_library.kernels: must be a non-empty list")
-        return
-    names: list[str] = []
-    for item in kernels:
-        if not isinstance(item, str) or IDENTIFIER.fullmatch(item) is None:
-            findings.append(f"kernel_library.kernels: invalid identifier {item!r}")
-            continue
-        names.append(item)
-    if len(names) != len(set(names)) or names != sorted(names):
-        findings.append("kernel_library.kernels: identifiers must be unique and sorted")
+    else:
+        names: list[str] = []
+        for item in kernels:
+            if not isinstance(item, str) or IDENTIFIER.fullmatch(item) is None:
+                findings.append(f"kernel_library.kernels: invalid identifier {item!r}")
+                continue
+            names.append(item)
+        if len(names) != len(set(names)) or names != sorted(names):
+            findings.append(
+                "kernel_library.kernels: identifiers must be unique and sorted"
+            )
+    if exclusions != [{"domain": KERNEL_UMBRELLA_DOMAIN, "owner": KERNEL_OWNER}]:
+        findings.append(
+            "excluded_domains: a kernel_library consumer must contain exactly "
+            "one shared-kernel exclusion owned by SCPN-REACTOR-KERNELS"
+        )
+
+
+def _validate_map_topology(
+    machine_map: dict[str, Any], findings: list[str]
+) -> tuple[list[Any], list[Any], dict[str, Any], dict[str, Any]]:
+    """Validate the family-map schema and disjoint device/library classes."""
+    if machine_map.get("schema_version") != FAMILY_MAP_SCHEMA_VERSION:
+        findings.append(f"map: schema_version must be {FAMILY_MAP_SCHEMA_VERSION!r}")
+    planned = machine_map.get("planned_repositories")
+    existing = machine_map.get("existing_repositories")
+    shared = machine_map.get("shared_library_projects")
+    assignments = machine_map.get("configuration_assignments")
+    if not isinstance(planned, list):
+        findings.append("map: planned_repositories must be a list")
+        planned = []
+    if not isinstance(existing, list):
+        findings.append("map: existing_repositories must be a list")
+        existing = []
+    if not isinstance(shared, dict):
+        findings.append("map: shared_library_projects must be an object")
+        shared = {}
+    if shared != {KERNEL_OWNER: KERNEL_LIBRARY_BOUNDARY}:
+        findings.append(
+            "map: shared_library_projects must contain only the exact "
+            "SCPN-REACTOR-KERNELS boundary"
+        )
+    device_names = [*planned, *existing]
+    if len(device_names) != len(set(device_names)):
+        findings.append("map: device repository classes must be disjoint and unique")
+    overlap = sorted(set(device_names) & set(shared))
+    if overlap:
+        findings.append(f"map: shared-library/device class overlap {overlap!r}")
+    if not isinstance(assignments, dict):
+        findings.append("map: configuration_assignments must be an object")
+        assignments = {}
+    assigned_shared = sorted(
+        identifier for identifier, owner in assignments.items() if owner in shared
+    )
+    if assigned_shared:
+        findings.append(
+            f"map: shared libraries cannot own configurations {assigned_shared!r}"
+        )
+    return planned, existing, shared, assignments
 
 
 def _cross_check_map(
@@ -416,13 +498,11 @@ def _cross_check_map(
     except (OSError, ValueError) as exc:
         findings.append(f"map: cannot load {map_path}: {exc}")
         return
+    planned, existing, _, assignments = _validate_map_topology(machine_map, findings)
     project = manifest.get("project")
-    planned = machine_map.get("planned_repositories", [])
-    existing = machine_map.get("existing_repositories", [])
     if project not in [*planned, *existing]:
         findings.append(f"map: project {project!r} is not a mapped repository")
         return
-    assignments = machine_map.get("configuration_assignments", {})
     assigned = sorted(
         identifier for identifier, owner in assignments.items() if owner == project
     )
@@ -431,7 +511,18 @@ def _cross_check_map(
             f"map: configurations {configurations!r} != assigned {assigned!r}"
         )
     source = machine_map.get("source_registry", {})
+    pending = machine_map.get("pending_registry_extension")
     version, digest = registry
+    if (
+        version is not None
+        and isinstance(pending, dict)
+        and version == pending.get("version")
+        and version != source.get("version")
+    ):
+        # The manifest pins a registry release that the group has prepared
+        # and the map carries as pending; the pin must equal the prepared
+        # digest exactly (the fleet re-pins once SPO lands the release).
+        source = pending
     if version is not None and version != source.get("version"):
         findings.append(
             f"map: registry version {version!r} != map {source.get('version')!r}"

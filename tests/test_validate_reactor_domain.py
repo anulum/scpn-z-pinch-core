@@ -345,6 +345,11 @@ def test_manifest_without_a_kernel_library_pin_is_valid(tmp_path: Path) -> None:
     """A repository that consumes no shared kernel omits the block."""
     manifest = mutated()
     del manifest["kernel_library"]
+    manifest["excluded_domains"] = [
+        entry
+        for entry in manifest["excluded_domains"]
+        if entry.get("domain") != "shared_physics_geometry_and_numerics_kernels"
+    ]
     path = write_manifest_with_evidence(tmp_path, manifest)
     assert validate_manifest(path, None) == []
 
@@ -389,6 +394,15 @@ def test_map_cross_check_accepts_an_exactly_agreeing_map(tmp_path: Path) -> None
     map_path.write_text(
         json.dumps(
             {
+                "schema_version": "1.1.0",
+                "shared_library_projects": {
+                    "SCPN-REACTOR-KERNELS": (
+                        "Shared physics, geometry, numerics, CAD, and meshing "
+                        "kernels; non-device library with zero SPO configuration "
+                        "assignments and no solver, control, safety, or "
+                        "machine-protection authority."
+                    )
+                },
                 "planned_repositories": [project],
                 "existing_repositories": [],
                 "configuration_assignments": dict.fromkeys(
@@ -462,3 +476,233 @@ def test_main_pass_and_fail_exit_codes(
     output = capsys.readouterr().out
     assert "reactor-domain: FAIL" in output
     assert "- license:" in output
+
+
+KERNEL_BOUNDARY = (
+    "Shared physics, geometry, numerics, CAD, and meshing kernels; non-device "
+    "library with zero SPO configuration assignments and no solver, control, "
+    "safety, or machine-protection authority."
+)
+KERNEL_EXCLUSION = {
+    "domain": "shared_physics_geometry_and_numerics_kernels",
+    "owner": "SCPN-REACTOR-KERNELS",
+}
+
+
+def _rf_kl_manifest_with_pin() -> dict[str, Any]:
+    """Return a valid local manifest carrying one exact kernel pin."""
+    manifest = mutated()
+    manifest["kernel_library"] = manifest.get(
+        "kernel_library",
+        {
+            "distribution": "scpn-reactor-kernels",
+            "version": "1.2.3rc1.dev2",
+            "source_commit": "1" * 40,
+            "inventory_sha256": "2" * 64,
+            "kernels": ["geometry_unit_circle"],
+        },
+    )
+    excluded = [
+        entry
+        for entry in manifest["excluded_domains"]
+        if entry.get("domain") != KERNEL_EXCLUSION["domain"]
+    ]
+    manifest["excluded_domains"] = [KERNEL_EXCLUSION, *excluded]
+    return manifest
+
+
+def _rf_kl_map(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Return the minimum exact family map for one device manifest."""
+    registry = manifest["spo_registry"]
+    project = manifest["project"]
+    return {
+        "schema_version": "1.1.0",
+        "planned_repositories": [project],
+        "existing_repositories": [],
+        "shared_library_projects": {
+            "SCPN-REACTOR-KERNELS": KERNEL_BOUNDARY,
+        },
+        "configuration_assignments": dict.fromkeys(manifest["configurations"], project),
+        "source_registry": {
+            "version": registry["version"],
+            "digest_sha256": registry["digest_sha256"],
+        },
+    }
+
+
+def test_rf_kl_exact_kernel_pin_and_owner_exclusion_pass(tmp_path: Path) -> None:
+    """The portable half of the immutable shared-library contract is valid."""
+    manifest = _rf_kl_manifest_with_pin()
+    assert (
+        validate_manifest(write_manifest_with_evidence(tmp_path, manifest), None) == []
+    )
+
+
+def test_rf_kl_no_pin_and_no_owner_exclusion_is_valid(tmp_path: Path) -> None:
+    """A genuine non-consumer carries neither side of the coupled contract."""
+    manifest = _rf_kl_manifest_with_pin()
+    del manifest["kernel_library"]
+    manifest["excluded_domains"] = [
+        entry
+        for entry in manifest["excluded_domains"]
+        if entry.get("domain") != KERNEL_EXCLUSION["domain"]
+    ]
+    assert (
+        validate_manifest(write_manifest_with_evidence(tmp_path, manifest), None) == []
+    )
+
+
+def test_rf_kl_owner_exclusion_requires_pin(tmp_path: Path) -> None:
+    """A device cannot disclaim shared-kernel ownership without pinning it."""
+    manifest = _rf_kl_manifest_with_pin()
+    del manifest["kernel_library"]
+    findings = validate_manifest(write_manifest_with_evidence(tmp_path, manifest), None)
+    assert any("owner exclusion requires" in finding for finding in findings)
+
+
+def test_rf_kl_pin_requires_exact_owner_exclusion(tmp_path: Path) -> None:
+    """Every consumer names the exact KERNELS owner once."""
+    manifest = _rf_kl_manifest_with_pin()
+    manifest["excluded_domains"][0]["owner"] = "OTHER"
+    findings = validate_manifest(write_manifest_with_evidence(tmp_path, manifest), None)
+    assert any("must contain exactly one" in finding for finding in findings)
+
+
+def test_rf_kl_kernel_pin_defects_fail_closed(tmp_path: Path) -> None:
+    """Every closed pin field, grammar, digest and identifier rule is enforced."""
+    baseline = _rf_kl_manifest_with_pin()
+    cases: list[tuple[Any, str]] = [
+        ("text", "must be an object"),
+        ({**baseline["kernel_library"], "extra": True}, "unknown fields"),
+        (
+            {
+                key: value
+                for key, value in baseline["kernel_library"].items()
+                if key != "version"
+            },
+            "missing fields",
+        ),
+        (
+            {**baseline["kernel_library"], "distribution": "other"},
+            "distribution: must be",
+        ),
+        (
+            {**baseline["kernel_library"], "version": "latest"},
+            "invalid governed PEP 440",
+        ),
+        (
+            {**baseline["kernel_library"], "source_commit": "short"},
+            "source_commit",
+        ),
+        (
+            {**baseline["kernel_library"], "inventory_sha256": "ABC"},
+            "inventory_sha256",
+        ),
+        ({**baseline["kernel_library"], "kernels": None}, "non-empty list"),
+        ({**baseline["kernel_library"], "kernels": []}, "non-empty list"),
+        (
+            {**baseline["kernel_library"], "kernels": ["Bad-Name"]},
+            "invalid identifier",
+        ),
+        (
+            {**baseline["kernel_library"], "kernels": ["z", "a"]},
+            "unique and sorted",
+        ),
+        (
+            {**baseline["kernel_library"], "kernels": ["a", "a"]},
+            "unique and sorted",
+        ),
+    ]
+    for index, (pin, fragment) in enumerate(cases):
+        manifest = _rf_kl_manifest_with_pin()
+        manifest["kernel_library"] = pin
+        path = tmp_path / str(index)
+        path.mkdir()
+        findings = validate_manifest(write_manifest_with_evidence(path, manifest), None)
+        assert any(fragment in finding for finding in findings), findings
+
+
+def test_rf_kl_non_list_exclusions_fail_closed(tmp_path: Path) -> None:
+    """A malformed exclusion table cannot satisfy a kernel consumer."""
+    manifest = _rf_kl_manifest_with_pin()
+    manifest["excluded_domains"] = "bad"
+    findings = validate_manifest(write_manifest_with_evidence(tmp_path, manifest), None)
+    assert any("must be a non-empty list" in finding for finding in findings)
+    assert any("shared-kernel exclusion" in finding for finding in findings)
+
+
+def test_rf_kl_pending_registry_selection_is_portable(tmp_path: Path) -> None:
+    """Every family validator accepts an exactly matching pending registry pin."""
+    manifest = load_json_object(MANIFEST)
+    machine_map = _rf_kl_map(manifest)
+    machine_map["source_registry"] = {
+        "version": "0.0.0",
+        "digest_sha256": "0" * 64,
+    }
+    machine_map["pending_registry_extension"] = {
+        "version": manifest["spo_registry"]["version"],
+        "digest_sha256": manifest["spo_registry"]["digest_sha256"],
+    }
+    path = tmp_path / "pending-map.json"
+    path.write_text(json.dumps(machine_map), encoding="utf-8")
+    assert validate_manifest(MANIFEST, path) == []
+
+
+def test_rf_kl_map_topology_defects_fail_closed(tmp_path: Path) -> None:
+    """Schema, class separation, shared membership and assignments are closed."""
+    manifest = _rf_kl_manifest_with_pin()
+    baseline = _rf_kl_map(manifest)
+    cases: list[tuple[dict[str, Any], str]] = []
+
+    wrong_schema = {**baseline, "schema_version": "1.0.0"}
+    cases.append((wrong_schema, "schema_version"))
+
+    wrong_planned = {**baseline, "planned_repositories": "bad"}
+    cases.append((wrong_planned, "planned_repositories must be a list"))
+
+    wrong_existing = {**baseline, "existing_repositories": "bad"}
+    cases.append((wrong_existing, "existing_repositories must be a list"))
+
+    wrong_shared_type = {**baseline, "shared_library_projects": []}
+    cases.append((wrong_shared_type, "shared_library_projects must be an object"))
+
+    wrong_shared_member = {
+        **baseline,
+        "shared_library_projects": {"UNKNOWN": KERNEL_BOUNDARY},
+    }
+    cases.append((wrong_shared_member, "must contain only the exact"))
+
+    duplicate_device = {
+        **baseline,
+        "existing_repositories": [manifest["project"]],
+    }
+    cases.append((duplicate_device, "must be disjoint and unique"))
+
+    overlapping = {
+        **baseline,
+        "planned_repositories": [
+            manifest["project"],
+            "SCPN-REACTOR-KERNELS",
+        ],
+    }
+    cases.append((overlapping, "class overlap"))
+
+    wrong_assignments_type = {**baseline, "configuration_assignments": []}
+    cases.append(
+        (wrong_assignments_type, "configuration_assignments must be an object")
+    )
+
+    assigned_shared = {
+        **baseline,
+        "configuration_assignments": {
+            **baseline["configuration_assignments"],
+            "forbidden": "SCPN-REACTOR-KERNELS",
+        },
+    }
+    cases.append((assigned_shared, "cannot own configurations"))
+
+    for index, (machine_map, fragment) in enumerate(cases):
+        map_path = tmp_path / f"map-{index}.json"
+        map_path.write_text(json.dumps(machine_map), encoding="utf-8")
+        findings = validate_manifest(MANIFEST, map_path)
+        assert any(fragment in finding for finding in findings), findings
