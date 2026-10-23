@@ -6,7 +6,7 @@
 # Contact: www.anulum.li | protoscience@anulum.li
 # SCPN Z-Pinch Core — device geometry and 3D model
 
-"""Device geometry, tier-G1 3D model and tier-G2 CAD model of the family.
+"""Analytic triangle-mesh and B-rep CAD device models of the family.
 
 A validated device geometry, the composed device model record of six
 analytic bodies, the composed device CAD model record of the same six

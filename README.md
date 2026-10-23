@@ -61,7 +61,7 @@ This repository owns, for the Z-pinch device family:
 - the device geometry and its 3D model: the coaxial mechanical envelope
   (electrodes, acceleration and assembly regions, chamber, end walls) and
   the deterministic analytic-surface model derived from it, with open-format
-  exports, plus the tier-G2 B-rep CAD model of the same bodies with a
+  exports, plus the B-rep CAD model of the same bodies with a
   normalised deterministic STEP export (no engineering property carried);
   the tessellation, mesh, export and CAD kernels themselves are the shared
   kernel library's, pinned here, not owned here;

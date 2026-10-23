@@ -90,7 +90,7 @@ time per operation.
 | `facet_six_bodies` (closed meshes at the declared deflections) | 55.69 | 59.68 | 56.01 | 18.0 | measured |
 | `device_cad_record_build` (full record: reference mesh, B-rep, export, faceting, evidence) | 447.31 | 503.56 | 457.69 | 2.2 | measured |
 
-The record build is dominated by the tier-G1 reference mesh (the
+The record build is dominated by the analytic reference mesh (the
 validated `TriangleMesh` construction of the comparison) and the
 per-body evidence; nothing here is a physics or engineering claim.
 

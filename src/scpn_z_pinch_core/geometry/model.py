@@ -6,7 +6,7 @@
 # Contact: www.anulum.li | protoscience@anulum.li
 # SCPN Z-Pinch Core — device 3D model record
 
-"""Tier-G1 device 3D model: analytic bodies of one validated design.
+"""Analytic triangle-mesh device model of one validated design.
 
 The model composes the validated configuration (plasma column) and the
 validated device geometry (electrodes, chamber, end walls) into six named,

@@ -97,7 +97,7 @@ Segment counts are multiples of eight (at least eight).
   additionally carries, per body, the B-rep volume and area against the
   analytic closed form within `1e-9` relative, the faceted volume deficit
   within the declared bound `2 d / r`, and the faceted volume against the
-  G1 mesh at the declared reference segment count within the exact
+  analytic reference mesh at the declared segment count within the exact
   polygon-deficit bound.
 
 ## Determinism

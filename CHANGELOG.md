@@ -21,7 +21,7 @@ SCPN Z-Pinch Core — CHANGELOG
   `cad_faceting`), a canonical `DeviceModelCAD` record
   (`scpn.z-pinch-cad-model.v1`) with per-body fail-closed evidence
   (B-rep against analytic closed forms within `1e-9`, faceting within the
-  declared deflection and polygon-deficit bounds against the tier-G1
+  declared deflection and polygon-deficit bounds against the analytic
   reference mesh), a normalised deterministic STEP export written by
   `write_step` and digested into the record with the back-end versions,
   and a standard-conformant benchmark
@@ -36,6 +36,8 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Changed
 
+- Describe the analytic triangle-mesh and B-rep CAD device models
+  consistently across API documentation and consumer contracts.
 - The device 3D model consumes the shared geometry kernels of
   `scpn-reactor-kernels` instead of carrying copies (ADR 0007): the unit
   circle, the tessellation primitives, the closed-mesh contract and the

@@ -350,7 +350,7 @@ agreement, determinism, deficit bounds, refusals) is the library's, at its
 (`src/scpn_z_pinch_core/geometry/cad.py`, `tests/test_geometry_cad.py`):
 
 - **Same design, same bodies**: the six B-rep bodies are built at the
-  names, roles, material tokens and extents of the tier-G1 model, proven
+  names, roles, material tokens and extents of the triangle-mesh model, proven
   by an inventory comparison against `build_device_model`.
 - **B-rep measures against the analytic closed forms**: every body's
   OpenCASCADE volume and surface area agree with the analytic cylinder or
@@ -359,10 +359,10 @@ agreement, determinism, deficit bounds, refusals) is the library's, at its
   construction of the record.
 - **Faceting evidence**: every body faceted at the declared deflections
   (linear `1e-4 m`, angular `0.1 rad`) validates as a closed,
-  outward-oriented mesh of the G1 contract; the faceted volume deficit
+  outward-oriented mesh of the triangle-mesh contract; the faceted volume deficit
   against the analytic form stays within the declared bound `2 d / r`
   (measured `6.6e-5` to `2.6e-4` against bounds `1.3e-3` to `2.0e-2`), and
-  the faceted volume agrees with the G1 reference mesh at the declared
+  the faceted volume agrees with the analytic reference mesh at the declared
   eight segments within the exact polygon-deficit bound `0.0997`
   (measured `9.94e-2` to `9.96e-2`).
 - **STEP export**: the written file is exactly the byte string whose
@@ -375,7 +375,7 @@ agreement, determinism, deficit bounds, refusals) is the library's, at its
   reference back-end environment (cadquery 2.8.0, OCP 7.9.3.1) as an
   immutability fixture; invalid segments, invalid deflections, a foreign
   body inventory, a foreign manifest schema and a malformed STEP digest
-  are refused; the column containment invariants of the G1 build are
+  are refused; the column containment invariants of the triangle-mesh build are
   enforced on the same path.
 - **Benchmark**: `benchmarks/device_model_cad.py` per the ecosystem
   benchmark standard (build, export, facet and full record build);

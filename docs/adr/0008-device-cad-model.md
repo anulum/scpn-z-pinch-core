@@ -15,15 +15,16 @@ Status: accepted (2026-09-03). Adds the fifth implemented capability,
 
 ## Context
 
-The tier-G1 model (ADR 0006, ADR 0007) produces analytic triangle meshes:
+The triangle-mesh model (ADR 0006, ADR 0007) tessellates analytic surfaces:
 enough for viewing, volumes and simple CSG neutronics, but not an
 engineering solid — no fillets, no ports, no STEP for CAD tooling, and no
-B-rep a volume mesher can consume. The research group's tier-G2 lane
-(plan of 2026-09-03) defines the next rung: B-rep solids of the SAME six
+B-rep a volume mesher can consume. The B-rep CAD model provides the next
+representation: B-rep solids of the same six
 bodies built by the pinned third-party OpenCASCADE kernel through the
 shared kernel library's `cad` group (`cad_brep_solids`, `cad_step_export`,
 `cad_faceting`), a normalised deterministic STEP export, and a faceting
-checked against the G1 mesh. This repository is the lane's pilot consumer.
+checked against the analytic reference mesh. This repository is the pilot
+consumer of these CAD kernels.
 
 ## Decision
 
@@ -33,17 +34,17 @@ checked against the G1 mesh. This repository is the lane's pilot consumer.
    extents as `build_device_model`, assembles them into the library's
    `BrepAssembly`, exports the normalised STEP bytes and facets every
    body. The record `DeviceModelCAD` (`scpn.z-pinch-cad-model.v1`,
-   version `1.0.0`) carries the units and axis convention of the G1
+   version `1.0.0`) carries the units and axis convention of the triangle-mesh
    record, both source digests, the declared deflections and the
    reference mesh segment count, the back-end versions, the assembly
    manifest, the STEP digest and the per-body evidence; canonical bytes
-   and the SHA-256 digest follow the G1 pattern.
+   and the SHA-256 digest follow the triangle-mesh record's canonical format.
 2. The evidence is fail-closed by construction: every body's B-rep volume
    and surface area must agree with the analytic closed form within the
    library's measure tolerance `1e-9`, the faceted volume's deficit
    against the analytic volume must stay within the declared bound
    `2 d / r` at the body's smallest circular radius, and the faceted
-   volume must agree with the G1 reference mesh at the declared segment
+   volume must agree with the analytic reference mesh at the declared segment
    count within the exact polygon-deficit bound
    `1 - (n / 2 pi) sin(2 pi / n)`. A violated bound raises
    `DeviceGeometryError`; nothing is clamped.

@@ -15,9 +15,9 @@ Public surface of the ``device_configuration_model``,
 synthetic diagnostic and clock declarations aligned with the pinned SPO
 observability catalogue, documented consistency estimates, four cited
 closed-form level-0 physics models evaluated on the validated
-configuration, a validated device geometry with a deterministic tier-G1
-3D model built on the pinned shared kernel library and open-format
-exports, the tier-G2 B-rep CAD model of the same design with a
+configuration, a validated device geometry with a deterministic analytic
+triangle-mesh model built on the pinned shared kernel library and open-format
+exports, the B-rep CAD model of the same design with a
 normalised deterministic STEP export, canonical serialisation with
 SHA-256 digests, and data-only pins to the SPO registries. No claim
 about any real machine or diagnostic is made anywhere in this package.

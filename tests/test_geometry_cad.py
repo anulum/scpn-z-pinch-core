@@ -4,14 +4,14 @@
 # © Code 2020–2026 Miroslav Šotek. All rights reserved.
 # ORCID: 0009-0009-3560-0851
 # Contact: www.anulum.li | protoscience@anulum.li
-# SCPN Z-Pinch Core — device CAD model tests (tier G2)
+# SCPN Z-Pinch Core — device B-rep CAD model tests
 
 """B-rep agreement, faceting bounds, STEP determinism and record identity.
 
 Every value is a synthetic fixture; nothing describes a real machine. The
 B-rep measures come from the pinned third-party OpenCASCADE kernel and are
 checked against the analytic closed forms within the library's declared
-tolerance; the tier-G1 reference mesh and the polygon-deficit bound come
+tolerance; the analytic reference mesh and the polygon-deficit bound come
 from the shared kernel library.
 """
 
@@ -80,8 +80,8 @@ def reference_cad_model() -> DeviceModelCAD:
     return build_device_cad(reference_configuration(), reference_geometry())
 
 
-def test_bodies_match_the_g1_inventory_roles_and_materials() -> None:
-    """The CAD bodies are the G1 bodies: same names, roles, materials."""
+def test_bodies_match_the_reference_mesh_inventory_roles_and_materials() -> None:
+    """CAD and reference mesh bodies share names, roles and materials."""
     model = reference_cad_model()
     reference = build_device_model(
         reference_configuration(), reference_geometry(), DEFAULT_REFERENCE_MESH_SEGMENTS
@@ -111,7 +111,7 @@ def test_faceted_volumes_stay_within_the_deflection_deficit_bound() -> None:
 
 
 def test_faceted_meshes_are_closed_and_outward_oriented() -> None:
-    """Every faceted mesh satisfies the G1 closed-mesh contract."""
+    """Every faceted mesh satisfies the closed triangle-mesh contract."""
     model = reference_cad_model()
     assert len(model.faceted_meshes) == len(BODY_NAMES)
     for mesh in model.faceted_meshes:
@@ -120,7 +120,7 @@ def test_faceted_meshes_are_closed_and_outward_oriented() -> None:
 
 
 def test_faceted_volumes_track_the_reference_mesh_within_the_polygon_bound() -> None:
-    """Faceted and G1 volumes agree within the exact polygon-deficit bound."""
+    """Faceted and reference volumes agree within the polygon-deficit bound."""
     model = reference_cad_model()
     reference = build_device_model(
         reference_configuration(), reference_geometry(), DEFAULT_REFERENCE_MESH_SEGMENTS

@@ -4,13 +4,13 @@
 # © Code 2020–2026 Miroslav Šotek. All rights reserved.
 # ORCID: 0009-0009-3560-0851
 # Contact: www.anulum.li | protoscience@anulum.li
-# SCPN Z-Pinch Core — device CAD model record (tier G2)
+# SCPN Z-Pinch Core — device B-rep CAD model record
 
-"""Tier-G2 device CAD model: B-rep solids of one validated design.
+"""B-rep CAD device model of one validated design.
 
 The model composes the validated configuration (plasma column) and the
 validated device geometry (electrodes, chamber, end walls) into the same
-six named bodies as the tier-G1 model (:func:`build_device_model`), built
+six named bodies as the triangle-mesh model (:func:`build_device_model`), built
 as exact B-rep solids of revolution by the pinned third-party OpenCASCADE
 kernel through the shared kernel library (``scpn_reactor_kernels.cad``,
 kernels ``cad_brep_solids``, ``cad_step_export``, ``cad_faceting``; ADR
@@ -18,7 +18,7 @@ kernels ``cad_brep_solids``, ``cad_step_export``, ``cad_faceting``; ADR
 fail-closed against its analytic closed form (volume and surface area
 within the library's declared relative tolerance ``1e-9``), the faceted
 B-rep volume is checked against the declared deflection deficit bound and
-against the tier-G1 mesh at the declared reference segment count within
+against the analytic reference mesh at the declared segment count within
 the exact polygon-deficit bound, and the STEP export is the library's
 normalised deterministic writer. The canonical record carries the schema
 identity, the units and axis convention, both source digests, the declared
@@ -93,7 +93,7 @@ CAD_MODEL_NON_CLAIMS: Final = (
     "no value describes or validates any real machine",
 )
 
-#: Reference segment count of the tier-G1 mesh the faceted B-rep is
+#: Segment count of the analytic reference mesh the faceted B-rep is
 #: compared against.
 DEFAULT_REFERENCE_MESH_SEGMENTS: Final = 8
 #: Declared mesher deflections of the pilot record.
@@ -108,7 +108,7 @@ class BodyCADEvidence:
     Parameters
     ----------
     name, role, material_identifier
-        Body identity, identical to the tier-G1 body of the same name.
+        Body identity, identical to the triangle-mesh body of the same name.
     analytic_volume_m3, brep_volume_m3
         Closed-form volume and the B-rep kernel's measure.
     volume_relative_error
@@ -126,7 +126,7 @@ class BodyCADEvidence:
         Declared bound ``2 d / r`` of the chord deficit at the body's
         smallest circular radius ``r`` and the linear deflection ``d``.
     reference_mesh_volume_m3
-        Signed volume of the tier-G1 mesh at the reference segment count.
+        Signed volume of the analytic mesh at the reference segment count.
     mesh_volume_relative_difference
         ``|V_faceted - V_reference| / V_analytic``.
     mesh_volume_difference_bound
@@ -226,7 +226,7 @@ class DeviceModelCAD:
     geometry_digest_sha256
         Digest of the validated geometry the model was built from.
     reference_mesh_segments
-        Segment count of the tier-G1 reference mesh of the comparison.
+        Segment count of the analytic reference mesh of the comparison.
     linear_deflection_m, angular_deflection_rad
         Declared mesher deflections of the faceting evidence.
     backend_versions
@@ -376,7 +376,7 @@ def _body_evidence(
     faceted
         The faceted closed mesh of the body.
     reference_mesh
-        The tier-G1 mesh of the body at the reference segment count.
+        The analytic mesh of the body at the reference segment count.
     linear_deflection_m
         The mesher's linear deflection.
     segments
@@ -429,7 +429,7 @@ def build_device_cad(
     geometry
         Validated device geometry (electrodes, chamber, end walls).
     segments
-        Segment count of the tier-G1 reference mesh of the faceting
+        Segment count of the analytic reference mesh of the faceting
         comparison; at least 8, multiple of 8.
     linear_deflection_m
         Largest chord distance of the faceting to the true surface;

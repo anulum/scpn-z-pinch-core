@@ -43,13 +43,13 @@ analytic surface is.
    parser. The layout follows the qualitative coaxial-gun/assembly-region
    arrangement of the sheared-flow z-pinch literature (Shumlak et al.,
    Phys. Plasmas 24 (2017) 055702); no dimension of any device is used.
-3. The model is tier G1: analytic bodies (solid cylinders and annular
-   tubes) tessellated into closed, outward-oriented triangle meshes with
+3. The model represents analytic bodies (solid cylinders and annular
+   tubes) as closed, outward-oriented triangle meshes with
    fixed vertex and face order. Six bodies in a fixed order: inner
    electrode, outer electrode, chamber wall, upstream and downstream end
    walls, and the plasma column (the configuration's column radius and
    length placed in the assembly region — an analytic surface, not an
-   equilibrium boundary). B-rep CAD (tier G2) is a separate, later
+   equilibrium boundary). B-rep CAD is a separate, later
    decision.
 4. Vertices come from a vendored deterministic unit circle: degree-15
    sine and degree-16 cosine Taylor polynomials in Horner form on
