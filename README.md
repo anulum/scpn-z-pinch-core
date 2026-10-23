@@ -129,16 +129,22 @@ CONTROL adapter contract is in
 ## Validation
 
 Every gate currently active in this repository is listed in
-[`VALIDATION.md`](VALIDATION.md). The local sequence is:
+[`VALIDATION.md`](VALIDATION.md). For a local change, select the relevant
+module tests and checks:
 
 ```bash
 make lint        # ruff check + ruff format --check
 make typecheck   # mypy --strict src tools tests benchmarks
-make test        # pytest with 100 % statement and branch coverage
 make validate    # domain manifest, descriptor, and inventory checks
-make rust        # native crate: fmt, clippy (warnings denied), tests
-make preflight   # the full fail-closed gate sequence
+make docs        # Markdown encoding and relative-link checks
+.venv/bin/pytest -q tests/test_preflight.py
 ```
+
+The full `make test` target measures `src/` and `tools/` at 100 % statement
+and branch coverage, matching CI. Run the full suite and `make preflight`
+before an explicitly requested push. Native changes also require the
+applicable crate and parity checks listed in `VALIDATION.md`; `make rust`
+runs formatting, Clippy with warnings denied, rustdoc and crate tests.
 
 ## Security
 

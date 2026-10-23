@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import sys
+import tarfile
 from pathlib import Path
 
 import pytest
@@ -149,11 +150,9 @@ def test_monorepo_map_path_finds_the_map_in_an_ancestor(tmp_path: Path) -> None:
     assert monorepo_map_path(repository) == map_file
 
 
-def test_monorepo_map_path_is_none_in_a_standalone_checkout(tmp_path: Path) -> None:
-    """A checkout with no ancestor map reports absence rather than guessing."""
-    repository = tmp_path / "standalone" / "REPO"
-    repository.mkdir(parents=True)
-    assert monorepo_map_path(repository) is None
+def test_monorepo_map_path_is_none_without_ancestors(tmp_path: Path) -> None:
+    """The filesystem root has no ancestor from which to inherit a map."""
+    assert monorepo_map_path(Path(tmp_path.anchor)) is None
 
 
 def test_gate_plan_carries_map_flag_when_an_ancestor_map_exists(
@@ -172,11 +171,9 @@ def test_gate_plan_carries_map_flag_when_an_ancestor_map_exists(
     assert str(map_file) in command
 
 
-def test_gate_plan_omits_map_flag_in_a_standalone_checkout(tmp_path: Path) -> None:
-    """Without a reachable map the validator gate carries no ``--map``."""
-    repository = tmp_path / "standalone" / "REPO"
-    repository.mkdir(parents=True)
-    command = dict(build_gate_plan(repository))["reactor-domain"]
+def test_gate_plan_omits_map_flag_without_ancestors(tmp_path: Path) -> None:
+    """The filesystem root has no ancestor map to add to its gate plan."""
+    command = dict(build_gate_plan(Path(tmp_path.anchor)))["reactor-domain"]
     assert command is not None
     assert "--map" not in command
 
@@ -218,3 +215,67 @@ def test_main_runs_selected_gate(capsys: pytest.CaptureFixture[str]) -> None:
     """The command-line interface wires ``--root`` and ``--only``."""
     assert main(["--root", str(REPO), "--only", "docs"]) == 0
     assert "preflight: PASS gates=1" in capsys.readouterr().out
+
+
+@pytest.fixture
+def public_documentation_tree(tmp_path: Path) -> Path:
+    """Extract the actual committed documentation graph for CLI probes."""
+    archive = tmp_path / "source.tar"
+    result = run_command_gate(
+        "source projection",
+        ["git", "archive", "--format=tar", "--output", str(archive), "HEAD"],
+        REPO,
+    )
+    assert result.passed, result.detail
+    projection = tmp_path / "public-source"
+    projection.mkdir()
+    with tarfile.open(archive) as source:
+        source.extractall(projection, filter="data")
+    return projection
+
+
+@pytest.mark.parametrize(
+    ("destination", "target_name", "expected_exit"),
+    [
+        (
+            "<docs/angle target (revision 1).md#section>",
+            "angle target (revision 1).md",
+            0,
+        ),
+        ("<docs/missing target.md>", None, 1),
+        ("<https://example.org/reference>", None, 0),
+        ("<#validation>", None, 0),
+    ],
+)
+def test_docs_cli_angle_destinations(
+    public_documentation_tree: Path,
+    destination: str,
+    target_name: str | None,
+    expected_exit: int,
+) -> None:
+    """The real CLI resolves angle paths and still refuses missing targets."""
+    if target_name is not None:
+        (public_documentation_tree / "docs" / target_name).write_text(
+            "# Section\n", encoding="utf-8"
+        )
+    readme = public_documentation_tree / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8") + f"\n[Reference]({destination})\n",
+        encoding="utf-8",
+    )
+    result = run_command_gate(
+        "documentation CLI",
+        [
+            sys.executable,
+            str(REPO / "tools" / "preflight.py"),
+            "--root",
+            str(public_documentation_tree),
+            "--only",
+            "docs",
+        ],
+        public_documentation_tree,
+    )
+    assert result.passed == (expected_exit == 0), result.detail
+    if expected_exit:
+        assert "broken relative link 'docs/missing target.md'" in result.detail
+        assert "preflight: FAIL gates_failed=1" in result.detail

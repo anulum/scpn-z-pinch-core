@@ -44,13 +44,18 @@ Contributions are coordinated directly with the owner
 ## Workflow
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
-make lint typecheck test validate   # or: make preflight
+make venv
+make lint typecheck validate docs
+.venv/bin/pytest -q tests/test_preflight.py
 ```
 
-All gates in `VALIDATION.md` must pass before a commit is proposed. Commits
-are atomic, descriptive, and staged by explicit pathspec. History is never
-rewritten.
+Select the tests relevant to the changed modules and exercise their actual
+entry points. The commands above show the preflight module as an example.
+Run the full suite and `make preflight` before an explicitly requested push;
+`make test` preserves CI's 100 % statement and branch coverage gate over
+`src/` and `tools/`. Native changes require the corresponding crate and
+Python/native parity checks in `VALIDATION.md`. Commits are atomic,
+descriptive, and staged by explicit pathspec. History is never rewritten.
 
 ## Security-relevant changes
 
