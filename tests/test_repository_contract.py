@@ -225,7 +225,7 @@ def test_kernel_library_pin_agrees_with_the_dependency_and_the_package() -> None
     workflows = REPO / ".github" / "workflows"
     for name in ("reusable-static-policy.yml", "reusable-tests.yml", "pre-commit.yml"):
         text = (workflows / name).read_text(encoding="utf-8")
-        assert "pip install -e ." in text, name
+        assert "pip install --no-deps -e ." in text, name
     native_step = (workflows / "reusable-tests.yml").read_text(encoding="utf-8")
     assert f"scpn-reactor-kernels.git@{pin['source_commit']}#subdirectory=rust" in (
         native_step

@@ -12,6 +12,15 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ## [Unreleased]
 
+### Changed
+
+- Install every CI dependency from hash-locked requirement sets with
+  `--require-hashes`: the development toolchain, the audit and inventory
+  tools, and the first-party kernel library by source-archive digest at the
+  commit pinned in `pyproject.toml`. `make lock` regenerates the sets; the
+  package itself installs with `--no-deps`. Toolchain, action and
+  interpreter pins move to their newest releases.
+
 ### Added
 
 - Device CAD model (`src/scpn_z_pinch_core/geometry/cad.py`, capability
