@@ -279,3 +279,19 @@ def test_docs_cli_angle_destinations(
     if expected_exit:
         assert "broken relative link 'docs/missing target.md'" in result.detail
         assert "preflight: FAIL gates_failed=1" in result.detail
+
+
+def test_check_docs_unwraps_angle_enclosed_destinations(tmp_path: Path) -> None:
+    """Angle-enclosed paths resolve in process; a missing target is refused."""
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "present target.md").write_text(
+        "# Section\n", encoding="utf-8"
+    )
+    (tmp_path / "README.md").write_text(
+        "[present](<docs/present target.md#section>)\n"
+        "[missing](<docs/missing target.md>)\n",
+        encoding="utf-8",
+    )
+    assert check_docs(tmp_path) == [
+        "README.md: broken relative link 'docs/missing target.md'"
+    ]
