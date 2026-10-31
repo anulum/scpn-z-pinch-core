@@ -1,6 +1,6 @@
 {
   "title": "SCPN Z-Pinch Core",
-  "description": "Governed device-family repository for the classical and sheared-flow Z-pinch configurations within the SCPN Reactor Systems Research Group. Currently architecture-only: boundary contracts, CONTROL adapter specification, and validation tooling, with no implemented reactor capability.",
+  "description": "Governed device-family repository for the z-pinch and sheared-flow z-pinch configurations within the SCPN Reactor Systems Research Group. Evidence maturity computational_prototype: a validated device configuration model, diagnostic and clock semantics aligned with the SCPN Phase Orchestrator observability catalogue, level-0 device physics (Bennett equilibrium, ideal-MHD growth estimates with the Kadomtsev criterion, the Shumlak-Hartman sheared-flow criterion and the Pease-Braginskii current), and tessellated and B-rep device models with STL, glTF and STEP exports. All parameter sets are synthetic; no real machine is described, and the claim inventory is empty.",
   "upload_type": "software",
   "access_right": "open",
   "license": "AGPL-3.0-or-later",
