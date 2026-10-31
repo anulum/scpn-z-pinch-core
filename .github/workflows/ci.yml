@@ -30,11 +30,16 @@ jobs:
     uses: ./.github/workflows/reusable-tests.yml
     permissions:
       contents: read
+  package:
+    name: Installed wheel
+    uses: ./.github/workflows/reusable-package.yml
+    permissions:
+      contents: read
   gate:
     name: Required gate
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [static-policy, tests]
+    needs: [static-policy, tests, package]
     if: always()
     permissions: {}
     steps:

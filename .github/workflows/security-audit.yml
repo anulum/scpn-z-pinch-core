@@ -47,7 +47,7 @@ jobs:
         run: |
           "$(go env GOPATH)/bin/gitleaks" detect --source . --no-banner --redact
       - name: Dependency vulnerability audit
-        run: pip-audit --disable-pip -r requirements-dev.txt -r requirements-audit.txt
+        run: pip-audit --disable-pip -r requirements-dev.txt -r requirements-audit.txt -r requirements-build.txt
       - name: Licensing compliance
         run: reuse lint
       - name: Workflow policy lint

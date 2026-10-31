@@ -53,7 +53,7 @@ from scpn_reactor_kernels.cad import (
 from scpn_reactor_kernels.cad import (
     step_sha256 as _step_bytes_sha256,
 )
-from scpn_reactor_kernels.errors import CadError, GeometryError
+from scpn_reactor_kernels.errors import CadError, CadUnavailableError, GeometryError
 from scpn_reactor_kernels.geometry import TriangleMesh, require_segments
 
 from scpn_z_pinch_core.configuration import DeviceConfiguration
@@ -516,6 +516,8 @@ def build_device_cad(
             )
         )
         faceted = facet_assembly(assembly, linear_deflection_m, angular_deflection_rad)
+    except CadUnavailableError:
+        raise
     except CadError as exc:
         raise DeviceGeometryError(str(exc)) from exc
     smallest_radii = (

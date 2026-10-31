@@ -11,13 +11,13 @@
     "max_lines": 1000,
     "max_bytes": 102400
   },
-  "omitted_categories": [3, 5, 6, 7, 10, 11],
+  "omitted_categories": [5, 6, 7, 10, 11],
   "workflows": [
     {
       "file": "ci.yml",
       "kind": "coordinator",
       "category": 1,
-      "jobs": ["static-policy", "tests", "gate"],
+      "jobs": ["static-policy", "tests", "package", "gate"],
       "owner": "coordinator and stable required gate"
     },
     {
@@ -33,6 +33,13 @@
       "category": 4,
       "jobs": ["run", "rust", "cad"],
       "owner": "unit, component, scientific quality, native parity and benchmark smoke"
+    },
+    {
+      "file": "reusable-package.yml",
+      "kind": "reusable",
+      "category": 3,
+      "jobs": ["run"],
+      "owner": "build and installed-wheel verification"
     },
     {
       "file": "pre-commit.yml",

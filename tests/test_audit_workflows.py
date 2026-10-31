@@ -280,7 +280,12 @@ def test_gate_must_exist(tmp_path: Path) -> None:
 def test_gate_needs_every_category(tmp_path: Path) -> None:
     """The gate must depend on every category call exactly once."""
     root = _tree(tmp_path)
-    _edit(root, "ci.yml", "    needs: [static-policy, tests]", "    needs: [tests]")
+    _edit(
+        root,
+        "ci.yml",
+        "    needs: [static-policy, tests, package]",
+        "    needs: [tests, package]",
+    )
     errors = audit(root)
     assert any("gate must need every category call" in error for error in errors)
 

@@ -36,6 +36,7 @@ and tool coverage scope as CI, and `make typecheck` retains benchmarks.
 | Native parity | `pytest -q tests/test_physics_native_parity.py tests/test_geometry_native_parity.py` (the second file needs the pinned library's native module) | bit-exact float64 agreement of every native kernel (physics and geometry) with the Python floor (skipped hermetically when the optional native module is absent) |
 | Documentation | `python3 tools/preflight.py --only docs` | UTF-8 readability and relative-link integrity of every Markdown file |
 | Orchestrated | `python3 tools/preflight.py` | fail-closed Python, manifest, generated-file, licensing, workflow and documentation sequence; native crate and parity checks remain separate lanes |
+| Installed wheel (CI only) | `python -I tools/installed_package_check.py --checkout <checkout>` in a clean environment holding the locked dependencies and the built wheel | package imported from site-packages, `py.typed` shipped, metadata version and kernel requirement, configuration and geometry round trip, deterministic level-0 record and device model, one STEP model |
 
 ## Workflow gates
 
