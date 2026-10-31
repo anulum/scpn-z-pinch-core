@@ -49,7 +49,12 @@ bind. Three candidates apply to the configurations this repository owns: `self_m
 4. Timing is fail-closed where physics fixes the bound: the Nyquist
    criterion for cyclic channels, a positive event-timing bound, and
    clock resolution at or below that bound. The device-typical checks
-   are advisory only: the sausage/kink pinch instability scale 0.1–100 MHz and the ~100 ns pinch drive timescale (U. Shumlak, C. W. Hartman, Phys. Rev. Lett. 75 (1995) 3285).
+   are advisory only and compare against declared synthetic design bounds:
+   a sausage/kink band of 0.1–100 MHz, a 10 ns event-timing bound and a
+   ~1 ms discharge-duration bound. No source on file states them; an earlier
+   version attributed them to U. Shumlak and C. W. Hartman, Phys. Rev. Lett.
+   75 (1995) 3285, whose abstract gives only a dimensionless shear threshold
+   (corrected 2026-10-31).
 5. The reference plan mirrors canonical practice with synthetic
    declarations: a pulsed-power current/voltage event train (event relative against the bank-trigger epoch), a pinch-mode probe array (derived cyclic against the facility clock), and the model-owned synthetic oscillator (simulation clock). Every applicable candidate must be
    planned or explicitly deferred with a reason; every channel is

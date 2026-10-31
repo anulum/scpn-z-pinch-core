@@ -10,7 +10,8 @@
 //! identical in operation order to
 //! `scpn_z_pinch_core.physics.sheared_flow.minimum_stabilising_shear`.
 
-/// Published coefficient of the threshold.
+/// Largest threshold coefficient Shumlak and Hartman report for the
+/// wall positions and equilibria they studied.
 pub const SHUMLAK_HARTMAN_COEFFICIENT: f64 = 0.1;
 
 /// Minimum stabilising shear `0.1 k v_A`.

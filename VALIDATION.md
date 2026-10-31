@@ -115,8 +115,12 @@ What is exercised, all under the 100 % statement-and-branch coverage gate:
   release is rejected.
 - A reference plan mirroring canonical practice with synthetic
   declarations: current/voltage event train, pinch-mode probe array, synthetic oscillator, each bound to its clock domain.
-- Documented advisory band and timing checks with their sources stated
-  in the code: sausage/kink instability bands of 0.1–100 MHz and ~100 ns drive timing (Shumlak and Hartman 1995); findings are reported, never clamped.
+- Advisory band and timing checks against declared synthetic design
+  bounds: a sausage/kink band of 0.1–100 MHz, a 10 ns event-timing bound and
+  a ~1 ms discharge-duration bound. No source on file states these numbers;
+  they were earlier attributed to Shumlak and Hartman (1995), whose abstract
+  gives only a dimensionless shear threshold, and the attribution was removed
+  (2026-10-31). Findings are reported, never clamped.
 - Canonical serialisation (sorted keys, NaN/infinity rejected on both
   emit and parse), SHA-256 digest identity, and a strict round-trip
   parser that refuses unknown fields.
@@ -225,6 +229,8 @@ What is exercised, all under the 100 % statement-and-branch coverage gate
   `gamma_ad = 2`.
 - **Sheared-flow stabilisation** (Shumlak and Hartman, PRL 75 (1995)
   3285): the threshold `dv_z/dr > 0.1 k v_A` for a declared wavenumber
+  (0.1 is the largest threshold the paper reports for the wall positions
+  and marginally m=0-stable equilibria it studied, not a general constant)
   and the disposition of the declared shear; the static class reports
   no stabilisation.
 - **Pease-Braginskii current** (Pease 1957; Braginskii 1958) in the

@@ -10,8 +10,11 @@
 
 U. Shumlak and C. W. Hartman, Phys. Rev. Lett. 75 (1995) 3285, found
 from linear ideal-MHD calculations that a sheared axial flow stabilises
-the m=1 kink mode of a z-pinch when the shear exceeds
-``dv_z / dr > 0.1 k v_A`` for the axial wavenumber ``k``. This module
+the m=1 kink mode of a z-pinch when the shear exceeds a threshold that
+depends on the conducting-wall position; ``0.1 k v_A`` was the largest
+threshold for the equilibria they studied (marginally m=0-stable profiles,
+not a Bennett profile), and is used here as that bound for the axial
+wavenumber ``k``. This module
 evaluates that threshold for a declared wavenumber and compares the
 shear the configuration declares against it. No flow profile is solved
 and no spectrum is computed; the disposition is a statement of the
