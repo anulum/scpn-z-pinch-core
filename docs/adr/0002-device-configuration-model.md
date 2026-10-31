@@ -42,8 +42,9 @@ semantics follow the family pilot.
    ``T = mu0 I^2 / (16 pi N e)`` (equal ion and electron temperatures;
    W. H. Bennett, Phys. Rev. 45 (1934) 890). Advisory finding, reported
    by `consistency_report()` and never clamped: a Bennett temperature
-   outside the documented model window ``[1 eV, 100 keV]`` of pinch
-   plasma experiments.
+   outside the declared model window ``[1 eV, 100 keV]`` (a modelling
+   choice; no source for the window is on file, and the earlier text
+   called it documented, corrected on 2026-10-31).
 5. Repository-level `evidence_maturity` = the highest state claimed by
    any capability entry; per-capability states are the authoritative
    claim surface.

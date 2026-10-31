@@ -91,6 +91,7 @@ def test_consistency_report_clean_and_finding() -> None:
     findings = hot.consistency_report()
     assert len(findings) == 1
     assert "Bennett temperature" in findings[0].message
+    assert "declared pinch plasma window" in findings[0].message
 
 
 def test_canonical_round_trip_and_digest() -> None:

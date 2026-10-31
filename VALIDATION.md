@@ -79,8 +79,9 @@ What is exercised, all under the 100 % statement-and-branch coverage gate:
   tested.
 - The Bennett-relation temperature `T = mu0 I^2 / (16 pi N e)`
   (Bennett, Phys. Rev. 45 (1934) 890) as a documented derived quantity,
-  with an advisory finding outside the documented `[1 eV, 100 keV]`
-  pinch plasma window, reported and never clamped.
+  with an advisory finding outside the declared `[1 eV, 100 keV]`
+  pinch plasma window (no source on file; called documented until
+  2026-10-31), reported and never clamped.
 - Canonical serialisation (sorted keys, NaN/infinity rejected on both
   emit and parse), SHA-256 digest identity, and a strict round-trip
   parser that refuses unknown fields.

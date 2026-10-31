@@ -22,7 +22,7 @@ Outputs (written next to this script):
 - ``repo_header_shear_classes.png`` — the static class beside the
   flow-stabilised class with its velocity profile.
 - ``repo_header_bennett_window.png`` — the Bennett balance with the
-  documented plasma window and flagged points.
+  declared plasma window and flagged points.
 
 Generation-time tooling only: requires ``numpy`` and ``matplotlib``,
 which are deliberately not part of the pinned development lock. Run as
@@ -461,7 +461,7 @@ def generate_bennett_window() -> None:
     ax.text(
         1.25,
         (y_low + y_high) / 2,
-        "documented plasma window",
+        "declared plasma window",
         color=GREEN,
         fontsize=8,
         fontfamily="monospace",
@@ -499,7 +499,7 @@ def generate_bennett_window() -> None:
     ax.text(
         5.0,
         0.75,
-        "declared Bennett temperature checked against the documented window",
+        "declared Bennett temperature checked against the declared window",
         color="#445566",
         fontsize=8,
         fontfamily="monospace",

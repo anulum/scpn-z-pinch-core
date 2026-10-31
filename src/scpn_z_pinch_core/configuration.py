@@ -13,7 +13,7 @@ discharge under exactly one of the two registry identifiers this
 repository owns. The flow-shear class invariant is hard: sheared axial
 flow defines the stabilised class (Shumlak & Hartman, PRL 75 (1995)
 3285), and the static class declares exactly zero shear. The Bennett
-temperature outside the documented plasma window is flagged.
+temperature outside the declared plasma window is flagged.
 Serialisation is canonical (sorted keys, no NaN or infinity accepted
 anywhere) and the SHA-256 digest of those bytes identifies the exact
 parameter set. The registry binding is a data pin only — this package
@@ -154,8 +154,8 @@ class DeviceConfiguration:
         Returns
         -------
         tuple of ConsistencyFinding
-            Advisory findings from the documented estimates; empty when
-            the Bennett temperature sits in the documented window.
+            Advisory findings from the declared estimates; empty when
+            the Bennett temperature sits in the declared window.
             Findings are advisory instruments, not machine claims.
         """
         findings: list[ConsistencyFinding] = []
@@ -167,7 +167,7 @@ class DeviceConfiguration:
                     field="discharge.peak_current_ma",
                     message=(
                         f"Bennett temperature {temperature:.3g} eV is outside "
-                        f"the documented pinch plasma window [{low:.0f} eV, "
+                        f"the declared pinch plasma window [{low:.0f} eV, "
                         f"{high:.0f} eV]"
                     ),
                 )
