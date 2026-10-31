@@ -7,6 +7,9 @@
 # SCPN Z-Pinch Core — pre-commit hooks (repository-local, pinned via .venv)
 
 default_install_hook_types: [pre-commit, commit-msg, pre-push]
+# Hooks without their own stage list run before a commit and before a push,
+# never again at commit-msg: that stage carries only the trailer guard.
+default_stages: [pre-commit, pre-push]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

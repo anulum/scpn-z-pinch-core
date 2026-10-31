@@ -151,6 +151,10 @@ max-statements = 52
 # vector resolved through shutil.which, without a shell or untrusted input
 # (scope of S603)
 "tests/test_surface_enrollment.py" = ["S603"]
+# the docs-gate tests build scratch repositories with fixed `git` vectors
+# resolved through shutil.which, without a shell or untrusted input
+# (scope of S603)
+"tests/test_preflight.py" = ["S603"]
 # the benchmark records the commit with a fixed git argument vector resolved
 # through shutil.which, without a shell and without untrusted input
 "benchmarks/level0_physics.py" = ["S603"]

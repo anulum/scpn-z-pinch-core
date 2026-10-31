@@ -95,8 +95,48 @@ def run_command_gate(name: str, command: list[str], root: Path) -> GateResult:
     return GateResult(name, passed=True, detail="")
 
 
+def git_markdown_files(root: Path) -> list[Path] | None:
+    """List the Markdown files git would publish from a work tree.
+
+    Parameters
+    ----------
+    root
+        Repository root to scan.
+
+    Returns
+    -------
+    list[Path] or None
+        Tracked files plus untracked files that no ignore rule excludes,
+        so a new document is checked before its first commit while private
+        ignored trees are not; ``None`` when ``root`` is not a git work
+        tree or git cannot run.
+    """
+    try:
+        completed = subprocess.run(
+            [
+                "git",
+                "ls-files",
+                "-z",
+                "--cached",
+                "--others",
+                "--exclude-standard",
+                "--",
+                "*.md",
+            ],
+            cwd=root,
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        return None
+    if completed.returncode != 0:
+        return None
+    names = {name for name in completed.stdout.decode("utf-8").split("\0") if name}
+    return [root / name for name in sorted(names) if (root / name).is_file()]
+
+
 def iter_markdown_files(root: Path) -> Iterable[Path]:
-    """Yield every repository Markdown file outside skipped directories.
+    """Yield every repository Markdown file that documentation gates own.
 
     Parameters
     ----------
@@ -106,8 +146,15 @@ def iter_markdown_files(root: Path) -> Iterable[Path]:
     Yields
     ------
     Path
-        Markdown files in sorted order.
+        Markdown files in sorted order. In a git work tree these are the
+        files :func:`git_markdown_files` lists, so git-ignored private
+        trees are excluded; elsewhere every Markdown file outside the
+        skipped directories.
     """
+    listed = git_markdown_files(root)
+    if listed is not None:
+        yield from listed
+        return
     for path in sorted(root.rglob("*.md")):
         if SKIPPED_DIRECTORIES.isdisjoint(path.relative_to(root).parts[:-1]):
             yield path

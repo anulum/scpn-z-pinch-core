@@ -25,6 +25,10 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Changed
 
+- The documentation gate reads only files git would publish, so a
+  git-ignored private tree is never link-checked. Hooks without their own
+  stage list run before a commit and before a push only; commit-msg runs the
+  trailer guard alone.
 - Local and hosted gates check the same cohorts: `conftest.py` joins the
   typed cohort everywhere and `make validate` runs the workflow audit. A parity
   test binds the make targets and the preflight plan to the hosted workflows,

@@ -10,6 +10,8 @@
 
 from __future__ import annotations
 
+import shutil
+import subprocess
 import sys
 import tarfile
 from pathlib import Path
@@ -21,6 +23,7 @@ from preflight import (
     build_gate_plan,
     check_docs,
     docs_gate,
+    git_markdown_files,
     iter_markdown_files,
     main,
     monorepo_map_path,
@@ -70,6 +73,74 @@ def test_iter_markdown_files_skips_internal_directories(tmp_path: Path) -> None:
     (tmp_path / ".git" / "notes.md").write_text("skip", encoding="utf-8")
     found = [path.name for path in iter_markdown_files(tmp_path)]
     assert found == ["README.md"]
+
+
+def _git(root: Path, *args: str) -> None:
+    """Run one git command in a scratch repository."""
+    git = shutil.which("git")
+    assert git is not None
+    subprocess.run(
+        [
+            git,
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@example.org",
+            "-c",
+            "commit.gpgsign=false",
+            "-c",
+            "core.hooksPath=/dev/null",
+            *args,
+        ],
+        cwd=root,
+        check=True,
+        capture_output=True,
+    )
+
+
+def test_git_tree_checks_tracked_and_new_docs_but_not_ignored(tmp_path: Path) -> None:
+    """In a work tree the gate reads what git would publish, nothing else."""
+    _git(tmp_path, "init", "-q")
+    (tmp_path / ".gitignore").write_text("private/\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text("[gone](missing.md)", encoding="utf-8")
+    _git(tmp_path, "add", ".gitignore", "README.md")
+    _git(tmp_path, "commit", "-q", "-m", "seed")
+    (tmp_path / "NEW.md").write_text("[gone](also-missing.md)", encoding="utf-8")
+    (tmp_path / "private").mkdir()
+    (tmp_path / "private" / "notes.md").write_text(
+        "[gone](</abs/elsewhere.md>)", encoding="utf-8"
+    )
+    found = [path.name for path in iter_markdown_files(tmp_path)]
+    assert found == ["NEW.md", "README.md"]
+    findings = check_docs(tmp_path)
+    assert len(findings) == 2
+    assert not any("private" in finding for finding in findings)
+
+
+def test_git_tree_skips_a_tracked_file_deleted_from_disk(tmp_path: Path) -> None:
+    """A tracked document removed in the work tree is not read."""
+    _git(tmp_path, "init", "-q")
+    (tmp_path / "README.md").write_text("clean", encoding="utf-8")
+    (tmp_path / "OLD.md").write_text("clean", encoding="utf-8")
+    _git(tmp_path, "add", "README.md", "OLD.md")
+    _git(tmp_path, "commit", "-q", "-m", "seed")
+    (tmp_path / "OLD.md").unlink()
+    assert git_markdown_files(tmp_path) == [tmp_path / "README.md"]
+
+
+def test_git_listing_is_absent_outside_a_work_tree(tmp_path: Path) -> None:
+    """A directory that is not a git work tree falls back to a scan."""
+    assert git_markdown_files(tmp_path) is None
+
+
+def test_git_listing_is_absent_when_git_cannot_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Without a git executable the gate falls back instead of passing."""
+    monkeypatch.setenv("PATH", str(tmp_path / "no-bin"))
+    assert git_markdown_files(tmp_path) is None
+    (tmp_path / "README.md").write_text("[gone](missing.md)", encoding="utf-8")
+    assert len(check_docs(tmp_path)) == 1
 
 
 def test_check_docs_accepts_valid_links(tmp_path: Path) -> None:

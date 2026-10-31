@@ -213,3 +213,61 @@ def test_named_test_files_are_covered_only_by_the_full_suite() -> None:
     full = "pytest -q --cov=src --cov=tools --cov-branch --cov-fail-under=100"
     assert uncovered(reference, {full, "ruff check ."}) == set()
     assert uncovered(reference, {"ruff check ."}) == {"pytest -q tests/test_x.py"}
+
+
+def hook_stage_findings(config_text: str) -> list[str]:
+    """Report hooks that would run at an unintended stage.
+
+    Parameters
+    ----------
+    config_text
+        ``.pre-commit-config.yaml`` source.
+
+    Returns
+    -------
+    list[str]
+        Findings when hooks without their own stage list are not limited to
+        pre-commit and pre-push, or when any hook other than the trailer
+        guard runs at commit-msg.
+    """
+    config: dict[str, Any] = yaml.safe_load(config_text)
+    findings: list[str] = []
+    if config.get("default_stages") != ["pre-commit", "pre-push"]:
+        findings.append(f"default_stages: {config.get('default_stages')!r}")
+    for repo in config["repos"]:
+        for hook in repo["hooks"]:
+            stages = hook.get("stages", config.get("default_stages"))
+            if stages and "commit-msg" in stages and hook["id"] != "commit-trailers":
+                findings.append(f"{hook['id']}: runs at commit-msg")
+    return findings
+
+
+def test_hooks_run_once_at_their_intended_stage() -> None:
+    """Only the trailer guard runs at commit-msg; the rest before commit/push."""
+    text = (REPO / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    assert hook_stage_findings(text) == []
+
+
+@pytest.mark.parametrize(
+    ("before", "after", "expected"),
+    [
+        (
+            "default_stages: [pre-commit, pre-push]\n",
+            "",
+            "default_stages: None",
+        ),
+        (
+            "        stages: [pre-push]\n",
+            "        stages: [pre-push, commit-msg]\n",
+            "preflight-pre-push: runs at commit-msg",
+        ),
+    ],
+    ids=["no-default-stages", "extra-commit-msg-stage"],
+)
+def test_unintended_hook_stage_is_detected(
+    before: str, after: str, expected: str
+) -> None:
+    """Dropping the default or adding commit-msg to a hook is a finding."""
+    text = (REPO / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    assert before in text
+    assert expected in hook_stage_findings(text.replace(before, after, 1))
