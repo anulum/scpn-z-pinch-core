@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -168,3 +169,50 @@ def test_integer_accepted_where_number_expected() -> None:
     record["flow_shear_per_s"] = 1000000
     restored = configuration_from_record(record)
     assert restored.flow_shear_per_s == 1.0e6
+
+
+def test_configuration_from_bytes_rejects_duplicate_members() -> None:
+    """A repeated member is refused, not resolved by last-wins."""
+    data = synthetic_configuration().canonical_bytes()
+    first = b'"identifier":"sheared_flow_z_pinch",'
+    assert data.count(first) == 1
+    with pytest.raises(DeviceConfigurationError, match="duplicate member"):
+        configuration_from_bytes(data.replace(first, first + first))
+
+
+def test_configuration_from_bytes_rejects_nested_or_second_duplicates() -> None:
+    """The duplicate refusal holds for every member position."""
+    data = synthetic_configuration().canonical_bytes()
+    nested = b'"registry":{'
+    assert data.count(nested) == 1
+    with pytest.raises(DeviceConfigurationError, match="duplicate member"):
+        configuration_from_bytes(data.replace(nested, nested + b'"version":"9.9.9",'))
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        lambda record: json.dumps(record, indent=2, sort_keys=True) + "\n",
+        lambda record: json.dumps(record, separators=(",", ":")) + "\n",
+        lambda record: json.dumps(record, sort_keys=True, separators=(",", ":")),
+    ],
+    ids=["indented", "unsorted", "no-trailing-newline"],
+)
+def test_configuration_from_bytes_rejects_non_canonical_documents(
+    transform: Callable[[dict[str, Any]], str],
+) -> None:
+    """A valid document in any non-canonical byte form is refused."""
+    record = synthetic_configuration().to_record()
+    data = transform(record).encode("utf-8")
+    assert configuration_from_record(json.loads(data)) == synthetic_configuration()
+    with pytest.raises(DeviceConfigurationError, match="non-canonical document"):
+        configuration_from_bytes(data)
+
+
+def test_configuration_from_bytes_rejects_integer_spelling_of_a_real_field() -> None:
+    """Bytes must carry the canonical real spelling."""
+    data = synthetic_configuration().canonical_bytes()
+    canonical = b'"flow_shear_per_s":1000000.0'
+    assert data.count(canonical) == 1
+    with pytest.raises(DeviceConfigurationError, match="non-canonical document"):
+        configuration_from_bytes(data.replace(canonical, b'"flow_shear_per_s":1000000'))

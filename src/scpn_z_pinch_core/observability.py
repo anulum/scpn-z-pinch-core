@@ -2195,7 +2195,8 @@ def plan_from_bytes(data: bytes) -> DiagnosticPlan:
     Raises
     ------
     DiagnosticPlanError
-        If the document is not valid strict JSON or violates the model.
+        If the document is not valid strict JSON, nests deeper than the
+        decoder can follow, violates the model, or is not canonical.
     """
 
     def _reject_constant(literal: str) -> float:
@@ -2211,6 +2212,8 @@ def plan_from_bytes(data: bytes) -> DiagnosticPlan:
         )
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise DiagnosticPlanError(f"record: invalid JSON document: {exc}") from exc
+    except RecursionError as exc:
+        raise DiagnosticPlanError("record: JSON nesting is too deep") from exc
     plan = plan_from_record(record)
     if plan.canonical_bytes() != data:
         raise DiagnosticPlanError("record: non-canonical document is rejected")

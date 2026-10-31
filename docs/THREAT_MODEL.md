@@ -59,7 +59,7 @@ added.
 |---|---|
 | Editing the descriptor or inventory to imply implemented capability | both files are generated; `--check` drift gates in pre-commit, preflight, and CI fail on any manual edit |
 | Adding a capability or claim without evidence | validator requires every capability to carry an allowed maturity and a committed evidence pointer, and keeps the claims inventory empty until a claims contract exists |
-| Malformed or ambiguous document fed to a public parser | strict UTF-8 JSON; NaN and infinity literals rejected; the plan and envelope parsers also reject duplicate keys and non-canonical bytes; every field is validated before an object exists |
+| Malformed or ambiguous document fed to a public parser | strict UTF-8 JSON; NaN and infinity literals, duplicate members, non-canonical bytes and nesting deeper than the decoder can follow are rejected by all four parsers with the package error; every field is validated before an object exists; property and fuzz tests (`tests/test_parser_properties.py`) check that no other exception escapes |
 | Re-pinning the SPO registry silently | validator fails on version/digest mismatch against the manifest's recorded values (and against the portfolio map when present) |
 | Treating review-only semantics or a Studio request as an actuator command | `spo_semantic_profile.actionable` is `false`; adapter specification defines no actuation verb; machine-protection statement is a required manifest field the validator enforces |
 | Workflow tampering towards write authority | no write-authority or release workflow exists; permissions are empty at top level; `tools/audit_workflows.py` fails on any third-party action not pinned to a 40-hex commit and on drift from `.github/workflow-inventory.json` |

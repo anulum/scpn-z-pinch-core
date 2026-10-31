@@ -14,6 +14,8 @@ import dataclasses
 import hashlib
 import json
 import math
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -111,3 +113,43 @@ def test_geometry_is_frozen() -> None:
     with pytest.raises(dataclasses.FrozenInstanceError):
         reference_geometry().end_wall_thickness_m = 1.0  # type: ignore[misc]
     assert isinstance(reference_geometry(), DeviceGeometry)
+
+
+def test_geometry_from_bytes_rejects_duplicate_members() -> None:
+    """A repeated member is refused, not resolved by last-wins."""
+    data = reference_geometry().canonical_bytes()
+    first = b'"acceleration_region_length_m":1.0,'
+    assert data.count(first) == 1
+    with pytest.raises(DeviceGeometryError, match="duplicate member"):
+        geometry_from_bytes(data.replace(first, first + first))
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        lambda record: json.dumps(record, indent=2, sort_keys=True) + "\n",
+        lambda record: json.dumps(record, separators=(",", ":")) + "\n",
+        lambda record: json.dumps(record, sort_keys=True, separators=(",", ":")),
+    ],
+    ids=["indented", "unsorted", "no-trailing-newline"],
+)
+def test_geometry_from_bytes_rejects_non_canonical_documents(
+    transform: Callable[[dict[str, Any]], str],
+) -> None:
+    """A valid geometry in any non-canonical byte form is refused."""
+    record = reference_geometry().to_record()
+    data = transform(record).encode("utf-8")
+    assert geometry_from_record(json.loads(data)) == reference_geometry()
+    with pytest.raises(DeviceGeometryError, match="non-canonical document"):
+        geometry_from_bytes(data)
+
+
+def test_geometry_from_bytes_rejects_another_spelling_of_a_value() -> None:
+    """Bytes must carry the canonical spelling of every number."""
+    data = reference_geometry().canonical_bytes()
+    canonical = b'"chamber_wall_thickness_m":0.01'
+    assert data.count(canonical) == 1
+    with pytest.raises(DeviceGeometryError, match="non-canonical document"):
+        geometry_from_bytes(
+            data.replace(canonical, b'"chamber_wall_thickness_m":0.010')
+        )

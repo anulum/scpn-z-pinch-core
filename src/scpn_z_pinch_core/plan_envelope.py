@@ -528,8 +528,8 @@ def envelope_from_bytes(data: bytes) -> PlanEnvelope:
     Raises
     ------
     DiagnosticPlanError
-        If the document is not valid strict JSON or violates the
-        contract.
+        If the document is not valid strict JSON, nests deeper than the
+        decoder can follow, violates the contract, or is not canonical.
     """
 
     def _reject_constant(literal: str) -> float:
@@ -545,6 +545,8 @@ def envelope_from_bytes(data: bytes) -> PlanEnvelope:
         )
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise DiagnosticPlanError(f"record: invalid JSON document: {exc}") from exc
+    except RecursionError as exc:
+        raise DiagnosticPlanError("record: JSON nesting is too deep") from exc
     envelope = envelope_from_record(record)
     if envelope.canonical_bytes() != data:
         raise DiagnosticPlanError("record: non-canonical document is rejected")

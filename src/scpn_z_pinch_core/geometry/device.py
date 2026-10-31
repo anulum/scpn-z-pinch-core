@@ -212,13 +212,42 @@ def geometry_from_record(record: Any) -> DeviceGeometry:
     return DeviceGeometry(**{name: _number(record, name) for name in GEOMETRY_FIELDS})
 
 
+def _reject_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """Assemble a JSON object while refusing duplicate members.
+
+    Parameters
+    ----------
+    pairs
+        Key-value pairs in document order.
+
+    Returns
+    -------
+    dict[str, Any]
+        The assembled object.
+
+    Raises
+    ------
+    DeviceGeometryError
+        If any key occurs more than once.
+    """
+    record: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in record:
+            raise DeviceGeometryError(f"record: duplicate member {key!r} is rejected")
+        record[key] = value
+    return record
+
+
 def geometry_from_bytes(data: bytes) -> DeviceGeometry:
     """Build a validated geometry from canonical JSON bytes.
 
     Parameters
     ----------
     data
-        UTF-8 JSON document; NaN and infinity literals are rejected.
+        UTF-8 JSON document exactly as :meth:`DeviceGeometry.canonical_bytes`
+        emits it. NaN and infinity literals and duplicate members are
+        rejected, and so is any document whose bytes differ from the
+        canonical serialisation of the object it describes.
 
     Returns
     -------
@@ -228,7 +257,9 @@ def geometry_from_bytes(data: bytes) -> DeviceGeometry:
     Raises
     ------
     DeviceGeometryError
-        If the document is not valid strict JSON or violates the model.
+        If the document is not valid strict JSON, nests deeper than the
+        decoder can follow, carries a duplicate member, violates the
+        model, or is not canonical.
     """
 
     def _reject_constant(literal: str) -> float:
@@ -237,7 +268,16 @@ def geometry_from_bytes(data: bytes) -> DeviceGeometry:
         )
 
     try:
-        record = json.loads(data.decode("utf-8"), parse_constant=_reject_constant)
+        record = json.loads(
+            data.decode("utf-8"),
+            parse_constant=_reject_constant,
+            object_pairs_hook=_reject_duplicates,
+        )
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise DeviceGeometryError(f"record: invalid JSON document: {exc}") from exc
-    return geometry_from_record(record)
+    except RecursionError as exc:
+        raise DeviceGeometryError("record: JSON nesting is too deep") from exc
+    parsed = geometry_from_record(record)
+    if parsed.canonical_bytes() != data:
+        raise DeviceGeometryError("record: non-canonical document is rejected")
+    return parsed
