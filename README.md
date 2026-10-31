@@ -134,8 +134,8 @@ module tests and checks:
 
 ```bash
 make lint        # ruff check + ruff format --check
-make typecheck   # mypy --strict src tools tests benchmarks
-make validate    # domain manifest, descriptor, and inventory checks
+make typecheck   # mypy --strict src tools tests benchmarks conftest.py
+make validate    # domain manifest, descriptor, inventory, and workflow checks
 make docs        # Markdown encoding and relative-link checks
 .venv/bin/pytest -q tests/test_preflight.py
 ```

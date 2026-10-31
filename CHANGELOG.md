@@ -25,6 +25,11 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Changed
 
+- Local and hosted gates check the same cohorts: `conftest.py` joins the
+  typed cohort everywhere and `make validate` runs the workflow audit. A parity
+  test binds the make targets and the preflight plan to the hosted workflows,
+  and an enrollment test maps every tracked file — including the native crate
+  and the benchmarks — to exactly one gated surface.
 - Install every CI dependency from hash-locked requirement sets with
   `--require-hashes`: the development toolchain, the audit and inventory
   tools, and the first-party kernel library by source-archive digest at the

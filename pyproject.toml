@@ -147,6 +147,10 @@ max-statements = 52
 # preflight executes fixed argument vectors of repository gates without a
 # shell and without untrusted input (scope of S603/S607)
 "tools/preflight.py" = ["S603", "S607"]
+# the enrollment test lists the tracked tree with one fixed `git ls-files`
+# vector resolved through shutil.which, without a shell or untrusted input
+# (scope of S603)
+"tests/test_surface_enrollment.py" = ["S603"]
 # the benchmark records the commit with a fixed git argument vector resolved
 # through shutil.which, without a shell and without untrusted input
 "benchmarks/level0_physics.py" = ["S603"]

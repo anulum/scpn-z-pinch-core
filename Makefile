@@ -38,7 +38,7 @@ lint:
 	$(VENV)/ruff format --check .
 
 typecheck:
-	$(VENV)/mypy --strict src tools tests benchmarks
+	$(VENV)/mypy --strict src tools tests benchmarks conftest.py
 
 test:
 	$(VENV)/pytest -q --cov=src --cov=tools --cov-branch --cov-fail-under=100
@@ -47,6 +47,7 @@ validate:
 	$(PYTHON) tools/validate_reactor_domain.py reactor-domain.json
 	$(PYTHON) tools/derive_studio_descriptor.py --check
 	$(PYTHON) tools/generate_capability_inventory.py --check
+	$(PYTHON) tools/audit_workflows.py
 
 rust:
 	cd rust && cargo fmt --check && cargo clippy --all-targets --features python -- -D warnings && cargo doc --no-deps --features python && cargo test

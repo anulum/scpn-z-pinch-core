@@ -210,7 +210,15 @@ def build_gate_plan(root: Path) -> list[tuple[str, list[str] | None]]:
         ("ruff-format", [str(bin_dir / "ruff"), "format", "--check", "."]),
         (
             "mypy",
-            [str(bin_dir / "mypy"), "--strict", "src", "tools", "tests", "benchmarks"],
+            [
+                str(bin_dir / "mypy"),
+                "--strict",
+                "src",
+                "tools",
+                "tests",
+                "benchmarks",
+                "conftest.py",
+            ],
         ),
         (
             "tests",
