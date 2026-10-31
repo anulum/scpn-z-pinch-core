@@ -36,7 +36,17 @@ from scpn_z_pinch_core.parameters import (
 )
 
 PROTON_MASS_KG: Final = 1.67262192369e-27
+"""Proton mass in kilograms, the CODATA 2018 recommended value.
+
+CODATA 2022 gives ``1.67262192595 x 10^-27``, about ``1.4 x 10^-9`` relative
+higher; the Alfven speed and transit time move by half that relative amount.
+"""
 DEUTERON_MASS_KG: Final = 3.3435837724e-27
+"""Deuteron mass in kilograms, the CODATA 2018 recommended value.
+
+CODATA 2022 gives ``3.3435837768 x 10^-27``, about ``1.3 x 10^-9`` relative
+higher; the Alfven speed and transit time move by half that relative amount.
+"""
 
 
 @dataclass(frozen=True, slots=True)

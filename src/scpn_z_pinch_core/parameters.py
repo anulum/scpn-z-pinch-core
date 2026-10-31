@@ -24,7 +24,16 @@ from typing import Final
 from scpn_z_pinch_core.errors import DeviceConfigurationError
 
 MU0: Final = 4.0e-7 * math.pi
+"""Vacuum permeability in H/m under the pre-2019 SI convention ``4 pi x 10^-7``.
+
+The cited pinch literature uses this value. Since the 2019 SI revision the
+permeability is measured: CODATA 2018 gives ``1.25663706212 x 10^-6``, about
+``5.4 x 10^-10`` relative above the convention, and CODATA 2022 gives
+``1.25663706127 x 10^-6``, about ``1.3 x 10^-10`` below it. Outputs linear in
+``mu0`` move by the same relative amount, far below any advisory band here.
+"""
 ELEMENTARY_CHARGE_C: Final = 1.602176634e-19
+"""Elementary charge in coulombs, exact by the 2019 SI definition."""
 
 
 def require_finite(name: str, value: float) -> float:

@@ -104,3 +104,20 @@ def test_invalid_discharge_is_rejected(
     """Each discharge violation is rejected with its field name."""
     with pytest.raises(DeviceConfigurationError, match=fragment):
         synthetic_discharge(**overrides)
+
+
+#: CODATA 2018 and 2022 recommended vacuum permeability, H/m (measured since 2019).
+CODATA_2018_MU0 = 1.25663706212e-6
+CODATA_2022_MU0 = 1.25663706127e-6
+
+
+def test_mu0_is_the_pre_2019_convention_and_its_offset_is_documented() -> None:
+    """MU0 is 4 pi x 10^-7; the measured editions differ as the docstring says."""
+    assert 4.0e-7 * math.pi == MU0
+    assert 5.0e-10 < (CODATA_2018_MU0 - MU0) / CODATA_2018_MU0 < 6.0e-10
+    assert -1.5e-10 < (CODATA_2022_MU0 - MU0) / CODATA_2022_MU0 < -1.0e-10
+
+
+def test_elementary_charge_is_the_exact_si_value() -> None:
+    """The elementary charge is the exact 2019 SI defining value."""
+    assert ELEMENTARY_CHARGE_C == 1.602176634e-19

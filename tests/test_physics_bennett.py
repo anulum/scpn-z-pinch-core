@@ -183,3 +183,13 @@ def test_record_carries_every_field() -> None:
         "alfven_transit_time_s",
     }
     assert record["current_a"] == 1.0e5
+
+
+def test_ion_masses_are_the_codata_2018_values_with_documented_offsets() -> None:
+    """Both masses are CODATA 2018; CODATA 2022 differs as documented."""
+    assert PROTON_MASS_KG == 1.67262192369e-27
+    assert DEUTERON_MASS_KG == 3.3435837724e-27
+    proton = (1.67262192595e-27 - PROTON_MASS_KG) / 1.67262192595e-27
+    deuteron = (3.3435837768e-27 - DEUTERON_MASS_KG) / 3.3435837768e-27
+    assert 1.3e-9 < proton < 1.4e-9
+    assert 1.3e-9 < deuteron < 1.35e-9

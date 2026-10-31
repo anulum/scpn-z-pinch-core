@@ -25,9 +25,11 @@ pub mod pease_braginskii;
 pub mod sheared_flow;
 pub mod stability;
 
-/// Vacuum permeability in henries per metre (exact by the SI definition).
+/// Vacuum permeability in henries per metre under the pre-2019 SI convention
+/// `4 pi x 10^-7` used by the cited literature; since the 2019 SI revision it
+/// is measured (CODATA 2018 is about 5.4e-10 relative above it).
 pub const MU0: f64 = 4.0e-7 * std::f64::consts::PI;
-/// Elementary charge in coulombs (exact by the SI definition).
+/// Elementary charge in coulombs (exact by the 2019 SI definition).
 pub const ELEMENTARY_CHARGE_C: f64 = 1.602_176_634e-19;
 
 #[cfg(feature = "python")]
