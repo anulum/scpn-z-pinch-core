@@ -9,14 +9,21 @@
 """Bennett equilibrium of a z-pinch column (level-0 device physics).
 
 The model is the classical Bennett pinch (W. H. Bennett, Phys. Rev. 45
-(1934) 890) in the form reviewed by M. G. Haines, Plasma Phys. Control.
-Fusion 53 (2011) 093001, section 2: the integral pressure balance
-``mu0 I^2 / (8 pi) = N k (T_e + T_i)``, the Bennett density profile
+(1934) 890; not on file). The integral pressure balance
+``mu0 I^2 / (8 pi) = N k (T_e + T_i)`` is the hydrogenic, equal-temperature
+case of the Bennett condition ``mu0 I^2 / (8 pi) = k T_B N_i (1 + z)``
+printed in the filed thesis of D. Klíř, The Study of a Fibre Z-Pinch, CTU
+Prague (2005), arXiv:physics/0703207, eq. (2.15), printed page 28. The model
+also evaluates the Bennett density profile
 ``n(r) = n_0 / (1 + r^2 / a^2)^2`` with ``n_0 = N / (pi a^2)``, the
 azimuthal field of that profile ``B_theta(r) = mu0 I r / (2 pi (a^2 + r^2))``,
 and the Alfven speed and transit time of the column evaluated with the
-on-axis density. Every quantity is a closed-form evaluation of the
-published model on a validated device configuration; nothing here solves
+on-axis density. No filed source prints the profile or its field (the
+review M. G. Haines, Plasma Phys. Control. Fusion 53 (2011) 093001,
+section 2, is not on file); the tests check instead that the profile
+closes the pressure balance, integrates back to the line density and
+obeys Ampère's law. Every quantity is a closed-form evaluation on a
+validated device configuration; nothing here solves
 an equilibrium equation, and no value describes a real machine.
 """
 

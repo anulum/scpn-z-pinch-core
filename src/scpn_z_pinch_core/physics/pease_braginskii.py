@@ -34,8 +34,9 @@ is 0.51 times this) and the hydrogen-like bremsstrahlung
 ``1.69e-38 n_e sum(Z^2 n_Z) T_eV^{1/2}`` watt per cubic metre (page 58,
 equation 30). For a hydrogenic plasma (``z = 1``) with ``ln Lambda = 10``
 the expression gives 1.37 MA, the value Klir quotes on the same page as
-approximately 1.4 MA for deuterium with ``ln Lambda`` about 10, as does
-Haines, Plasma Phys. Control. Fusion 53 (2011) 093001, section 3.
+approximately 1.4 MA for deuterium with ``ln Lambda`` about 10. (An
+earlier text also credited Haines, Plasma Phys. Control. Fusion 53 (2011)
+093001, section 3, for the value; that review is not on file.)
 
 The current is independent of radius and line density; the ratio of the
 configured current to it labels the regime. Nothing here is a yield,

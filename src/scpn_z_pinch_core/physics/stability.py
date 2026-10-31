@@ -12,10 +12,14 @@ Two published statements are evaluated, nothing more:
 
 - the order-of-magnitude growth rate ``gamma ~ k v_A`` of the m=0 sausage
   and m=1 kink modes of an unstabilised z-pinch for a declared axial
-  wavenumber (M. G. Haines, Plasma Phys. Control. Fusion 53 (2011)
-  093001, section 5), and
+  wavenumber. The filed thesis of D. Klíř (CTU Prague, 2005,
+  arXiv:physics/0703207) prints ``Re(Gamma) ~ v_A / R`` for the m=0 mode
+  of the Bennett equilibrium (eq. (2.22), printed page 30), which is
+  this form at ``k ~ 1 / R``; the cited review M. G. Haines, Plasma Phys.
+  Control. Fusion 53 (2011) 093001, section 5, is not on file; and
 - the Kadomtsev m=0 criterion (B. B. Kadomtsev, Reviews of Plasma Physics
-  vol. 2 (1966) 153; Haines 2011, section 5): the pressure profile is
+  vol. 2 (1966) 153, not on file; printed in this form in Klíř 2005,
+  eq. (2.28), printed page 32): the pressure profile is
   sausage-stable at a radius where ``-d ln p / d ln r < 4 gamma_ad /
   (2 + gamma_ad beta)`` with ``beta = 2 mu0 p / B_theta^2``. For the
   Bennett profile both sides are closed forms of ``x = r / a``:
@@ -182,7 +186,9 @@ def kadomtsev_assessment(
     Substituting the Bennett closed forms, the criterion reduces to
     ``2 < gamma_ad`` independently of the radius: for the ideal
     monatomic index 5/3 the Bennett profile is sausage-unstable at every
-    radius, which is the published conclusion (Haines 2011, section 5).
+    radius. This agrees with the filed Klíř (2005) thesis, which prints a
+    positive ideal-MHD m=0 growth rate for the Bennett equilibrium
+    (printed page 30).
     """
     require_positive("radius_ratio", radius_ratio)
     require_positive("adiabatic_index", adiabatic_index)

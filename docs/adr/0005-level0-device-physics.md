@@ -32,9 +32,10 @@ evaluated on the validated configuration, without solving any equation.
    solved, and no FUSION seam is implied or consumed.
 2. Four models, each with its published form cited in the module
    docstring, live one per module under `src/scpn_z_pinch_core/physics/`:
-   the Bennett equilibrium (Bennett 1934; Haines 2011 §2), ideal-MHD
-   growth-rate estimates with the Kadomtsev m=0 criterion (Kadomtsev
-   1966; Haines 2011 §5), the Shumlak-Hartman sheared-flow criterion
+   the Bennett equilibrium (Bennett 1934; Bennett condition as printed
+   in Klíř 2005, eq. (2.15)), ideal-MHD growth-rate estimates with the
+   Kadomtsev m=0 criterion (Kadomtsev 1966; as printed in Klíř 2005,
+   eqs. (2.22) and (2.28)), the Shumlak-Hartman sheared-flow criterion
    (PRL 75 (1995) 3285), and the Pease-Braginskii current in the closed
    form of Klíř (2005), arXiv:physics/0703207, eq. (2.20), with NRL
    Plasma Formulary coefficients. A composed `Level0PhysicsRecord`
@@ -64,3 +65,15 @@ and would need their own acceptance contract. The manifest change alters
 `manifest_sha256` inside the plan envelope, so the envelope fixture is
 regenerated from the public surface and re-pinned; the plan bytes and
 `plan_sha256` are unchanged.
+
+## Amendment 2026-10-31
+
+The Bennett and stability models credited M. G. Haines, Plasma Phys.
+Control. Fusion 53 (2011) 093001, which is not on file (the external
+paper ledger lists it as not freely available). Their printed forms are
+now bound to the filed Klíř (2005) thesis: the Bennett condition
+eq. (2.15), printed page 28; the m=0 growth `Re(Gamma) ~ v_A / R` of the
+Bennett equilibrium eq. (2.22), printed page 30; the Kadomtsev criterion
+eq. (2.28), printed page 32. The Bennett density profile has no filed
+source; its tests check self-consistency instead. No formula or value
+changed.

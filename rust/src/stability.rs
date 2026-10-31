@@ -6,8 +6,10 @@
 // Contact: www.anulum.li | protoscience@anulum.li
 // SCPN Z-Pinch Core — ideal-MHD stability estimate kernels
 
-//! Growth-rate estimate `gamma ~ k v_A` (Haines 2011 §5) and the Kadomtsev
-//! m=0 criterion on the Bennett profile (Kadomtsev 1966), identical in
+//! Growth-rate estimate `gamma ~ k v_A` (Klíř 2005, arXiv:physics/0703207,
+//! eq. (2.22) prints `Re(Gamma) ~ v_A / R`) and the Kadomtsev m=0 criterion
+//! on the Bennett profile (Kadomtsev 1966; as printed in Klíř 2005,
+//! eq. (2.28)), identical in
 //! operation order to `scpn_z_pinch_core.physics.stability`.
 
 /// Kadomtsev criterion evaluated at one dimensionless radius.

@@ -211,16 +211,23 @@ Evidence record of the `level0_device_physics` capability
 What is exercised, all under the 100 % statement-and-branch coverage gate
 (`src/scpn_z_pinch_core/physics/`):
 
-- **Bennett equilibrium** (Bennett, Phys. Rev. 45 (1934) 890; Haines,
-  Plasma Phys. Control. Fusion 53 (2011) 093001, §2): the integral
+- **Bennett equilibrium** (Bennett, Phys. Rev. 45 (1934) 890, not on
+  file; the integral balance is the hydrogenic, equal-temperature case
+  of the Bennett condition `mu0 I^2 / (8 pi) = k T_B N_i (1 + z)` printed
+  in Klíř 2005, arXiv:physics/0703207, eq. (2.15), printed page 28; the
+  Haines 2011 review is not on file and its credit was removed on
+  2026-10-31): the integral
   pressure balance, the Bennett density and pressure profiles, the
   azimuthal field of that profile, the enclosed current, and the Alfvén
   speed and transit time at the on-axis density. Tests close the
   pressure balance to machine precision, integrate the profile back to
   the line density, verify Ampère's law at sampled radii, and check the
   `I^2`, `1/N` and `m_i^{-1/2}` scalings.
-- **Ideal-MHD stability estimates** (Haines 2011 §5; Kadomtsev, Reviews
-  of Plasma Physics 2 (1966) 153): the order-of-magnitude growth rate
+- **Ideal-MHD stability estimates** (Klíř 2005: m=0 growth
+  `Re(Gamma) ~ v_A / R` for the Bennett equilibrium, eq. (2.22), printed
+  page 30, and the Kadomtsev criterion, eq. (2.28), printed page 32;
+  Kadomtsev, Reviews of Plasma Physics 2 (1966) 153, and Haines 2011 §5
+  are not on file): the order-of-magnitude growth rate
   `gamma ~ k v_A` for a declared wavenumber and the Kadomtsev m=0
   criterion `-d ln p / d ln r < 4 gamma_ad / (2 + gamma_ad beta)` on the
   Bennett profile in closed form. Tests reproduce the published

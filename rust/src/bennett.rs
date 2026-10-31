@@ -6,7 +6,8 @@
 // Contact: www.anulum.li | protoscience@anulum.li
 // SCPN Z-Pinch Core — Bennett equilibrium kernel
 
-//! Bennett equilibrium of a z-pinch column (Bennett 1934; Haines 2011 §2),
+//! Bennett equilibrium of a z-pinch column (Bennett 1934; Bennett condition
+//! as printed in Klíř 2005, arXiv:physics/0703207, eq. (2.15)),
 //! operation-for-operation identical to
 //! `scpn_z_pinch_core.physics.bennett.bennett_equilibrium`.
 
