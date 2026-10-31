@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -111,12 +112,38 @@ REQUIRED_IGNORE_LINES = (
 )
 
 FORBIDDEN_BADGE_MARKERS = (
-    "[![",
     "api.reuse.software/badge/",
     "api.scorecard.dev/projects/",
     "bestpractices.dev/projects/",
     "pypi.org/project/",
 )
+
+WORKFLOW_BADGES = {
+    "CI": "ci.yml",
+    "CodeQL": "codeql.yml",
+    "Pre-commit": "pre-commit.yml",
+    "Security audit": "security-audit.yml",
+    "Docs": "docs.yml",
+}
+STATIC_BADGES = {
+    "License: AGPL-3.0-or-later": (
+        "https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg",
+        "LICENSE",
+    ),
+    "Commercial license available": (
+        "https://img.shields.io/badge/Commercial_license-available-success.svg",
+        "mailto:protoscience@anulum.li?subject=SCPN%20Z-Pinch%20Core%20Commercial%20License",
+    ),
+    "Sponsor": (
+        (
+            "https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa"
+            "?logo=githubsponsors&logoColor=white"
+        ),
+        "https://github.com/sponsors/anulum",
+    ),
+}
+WORKFLOW_ROOT = "https://github.com/anulum/scpn-z-pinch-core/actions/workflows/"
+BADGE = re.compile(r"\[!\[([^\]]+)\]\(([^)\s]+)\)\]\(([^)\s]+)\)")
 
 
 @pytest.mark.parametrize("relative", REQUIRED_PATHS)
@@ -142,6 +169,69 @@ def test_readme_carries_no_unearned_badge() -> None:
     readme = (REPO / "README.md").read_text(encoding="utf-8")
     for marker in FORBIDDEN_BADGE_MARKERS:
         assert marker not in readme, marker
+
+
+def earned_badge_findings(readme: str) -> list[str]:
+    """Report every README badge that is not bound to earned evidence.
+
+    Parameters
+    ----------
+    readme
+        README source.
+
+    Returns
+    -------
+    list[str]
+        Findings for unknown badges, badges bound to the wrong object,
+        workflow badges without a workflow file, and a missing earned
+        badge; empty when the block is exactly the qualified set.
+    """
+    findings: list[str] = []
+    seen: set[str] = set()
+    for label, image, target in BADGE.findall(readme):
+        seen.add(label)
+        if label in WORKFLOW_BADGES:
+            workflow = WORKFLOW_BADGES[label]
+            expected = (
+                f"{WORKFLOW_ROOT}{workflow}/badge.svg?branch=main",
+                f"{WORKFLOW_ROOT}{workflow}",
+            )
+            if not (REPO / ".github" / "workflows" / workflow).is_file():
+                findings.append(f"{label}: workflow {workflow} does not exist")
+        elif label in STATIC_BADGES:
+            expected = STATIC_BADGES[label]
+        else:
+            findings.append(f"{label}: badge is not in the qualified set")
+            continue
+        if (image, target) != expected:
+            findings.append(f"{label}: bound to {image} -> {target}")
+    missing = (set(WORKFLOW_BADGES) | set(STATIC_BADGES)) - seen
+    findings.extend(f"{label}: earned badge missing" for label in sorted(missing))
+    return findings
+
+
+def test_readme_badges_are_exactly_the_earned_set() -> None:
+    """Every badge is bound to this repository's earned evidence."""
+    readme = (REPO / "README.md").read_text(encoding="utf-8")
+    assert earned_badge_findings(readme) == []
+
+
+@pytest.mark.parametrize(
+    ("before", "after", "expected"),
+    [
+        ("workflows/ci.yml/badge.svg", "workflows/ci2.yml/badge.svg", "CI: bound"),
+        ("scpn-z-pinch-core/actions", "scpn-fusion-core/actions", "CI: bound"),
+        ("[![Docs]", "[![Coverage]", "Coverage: badge is not"),
+        ("[![Sponsor]", "[![Sponsors]", "Sponsor: earned badge missing"),
+    ],
+    ids=["wrong-workflow", "foreign-repository", "unknown-badge", "dropped-badge"],
+)
+def test_unbound_badge_is_detected(before: str, after: str, expected: str) -> None:
+    """A badge bound to anything but the earned evidence is a finding."""
+    readme = (REPO / "README.md").read_text(encoding="utf-8")
+    assert before in readme
+    findings = earned_badge_findings(readme.replace(before, after, 1))
+    assert any(finding.startswith(expected) for finding in findings), findings
 
 
 def test_changelog_starts_unreleased() -> None:
