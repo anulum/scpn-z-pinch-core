@@ -229,9 +229,10 @@ What is exercised, all under the 100 % statement-and-branch coverage gate
   no stabilisation.
 - **Pease-Braginskii current** (Pease 1957; Braginskii 1958) in the
   published closed form of Klíř, The Study of a Fibre Z-Pinch, PhD
-  thesis, CTU Prague (2005), arXiv:physics/0703207, eq. (2.20), with the
-  NRL Plasma Formulary Spitzer and bremsstrahlung coefficients converted
-  to SI. Tests reproduce the quoted hydrogenic reference value
+  thesis, CTU Prague (2005), arXiv:physics/0703207, eq. (2.20) on
+  printed page 29, with the 2019 NRL Plasma Formulary transverse Spitzer
+  resistivity (page 29) and hydrogen-like bremsstrahlung (page 58, eq. 30)
+  coefficients converted to SI. Tests reproduce the quoted hydrogenic reference value
   (1.37 MA against the literature's ≈ 1.4 MA at `ln Lambda = 10`) and the
   `sqrt(ln Lambda)` scaling.
 - A composed `Level0PhysicsRecord` (`scpn.z-pinch-level0-physics.v1`

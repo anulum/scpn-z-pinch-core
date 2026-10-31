@@ -14,7 +14,8 @@ at which ohmic heating balances bremsstrahlung: below it the column
 expands, above it the column contracts (radiative collapse). The
 published closed form implemented here is equation (2.20) of D. Klir,
 The Study of a Fibre Z-Pinch, PhD thesis, Czech Technical University in
-Prague (2005), arXiv:physics/0703207, derived under the stated closures:
+Prague (2005), arXiv:physics/0703207, printed page 29 with the closures
+(2.17)-(2.18), derived under the stated closures:
 optically thin plasma, uniform temperature, uniform current density,
 bremsstrahlung as the only loss, a parabolic density profile
 ``n_i(r) = n_max (1 - r^2 / R^2)``, Spitzer conductivity
@@ -23,15 +24,18 @@ density ``A z^3 n_i^2 (k T_e)^{1/2}``::
 
     I_PB = (pi / mu0) sqrt(48 ln Lambda / (sigma_0 A)) (1 + z) / z
 
-The two coefficients are the NRL Plasma Formulary values converted to
-SI with the temperature in joules (the half-integer powers of the
+The two coefficients are the 2019 NRL Plasma Formulary values converted
+to SI with the temperature in joules (the half-integer powers of the
 elementary charge are formed with ``sqrt`` only, so the native kernels
-reproduce them bit for bit): parallel Spitzer resistivity
-``1.03e-4 z ln Lambda T_eV^{-3/2}`` ohm metre and bremsstrahlung
-``1.69e-38 n_e sum(Z^2 n_Z) T_eV^{1/2}`` watt per cubic metre. For a
-hydrogenic plasma (``z = 1``) with ``ln Lambda = 10`` the expression
-gives 1.37 MA, the value the literature quotes as approximately 1.4 MA
-(Haines, Plasma Phys. Control. Fusion 53 (2011) 093001, section 3).
+reproduce them bit for bit): the transverse Spitzer resistivity
+``1.03e-4 z ln Lambda T_eV^{-3/2}`` ohm metre (page 29; the axial current
+of a z-pinch flows across its own azimuthal field, and the parallel value
+is 0.51 times this) and the hydrogen-like bremsstrahlung
+``1.69e-38 n_e sum(Z^2 n_Z) T_eV^{1/2}`` watt per cubic metre (page 58,
+equation 30). For a hydrogenic plasma (``z = 1``) with ``ln Lambda = 10``
+the expression gives 1.37 MA, the value Klir quotes on the same page as
+approximately 1.4 MA for deuterium with ``ln Lambda`` about 10, as does
+Haines, Plasma Phys. Control. Fusion 53 (2011) 093001, section 3.
 
 The current is independent of radius and line density; the ratio of the
 configured current to it labels the regime. Nothing here is a yield,

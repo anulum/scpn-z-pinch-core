@@ -13,9 +13,11 @@
 
 use crate::{ELEMENTARY_CHARGE_C, MU0};
 
-/// NRL parallel Spitzer resistivity coefficient, ohm metre with `T` in eV.
+/// 2019 NRL transverse Spitzer resistivity coefficient (page 29), ohm metre
+/// with `T` in eV; the axial pinch current flows across its azimuthal field.
 pub const SPITZER_RESISTIVITY_OHM_M_EV: f64 = 1.03e-4;
-/// NRL bremsstrahlung coefficient, watt per cubic metre with `T` in eV.
+/// 2019 NRL hydrogen-like bremsstrahlung coefficient (page 58, eq. 30), watt
+/// per cubic metre with `T` in eV.
 pub const BREMSSTRAHLUNG_W_M3_EV: f64 = 1.69e-38;
 
 /// `sigma_0` in siemens per metre per joule^(3/2).

@@ -45,6 +45,12 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Changed
 
+- The Pease-Braginskii coefficients name what the 2019 NRL Plasma Formulary
+  prints: `1.03e-2 Z ln Lambda T^-3/2` ohm centimetre is the transverse
+  Spitzer resistivity (page 29), the right one for an axial current across
+  the azimuthal self-field, not the parallel one the docstrings named; the
+  bremsstrahlung coefficient is equation 30 on page 58 and the closed form is
+  Klir's equation 2.20 on printed page 29. No value changes.
 - `MU0` documents its convention: the pre-2019 SI value `4 pi x 10^-7` H/m
   used by the cited pinch literature, about `5.4 x 10^-10` relative below
   CODATA 2018 and `1.3 x 10^-10` above CODATA 2022; the native crate no longer
