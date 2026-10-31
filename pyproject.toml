@@ -155,6 +155,11 @@ max-statements = 52
 # resolved through shutil.which, without a shell or untrusted input
 # (scope of S603)
 "tests/test_preflight.py" = ["S603"]
+# the trailer range audit runs fixed read-only `git rev-list` / `git show`
+# vectors resolved through shutil.which, without a shell; a range starting
+# with "-" is refused before git sees it (scope of S603)
+"tools/check_commit_trailers.py" = ["S603"]
+"tests/test_check_commit_trailers.py" = ["S603"]
 # the benchmark records the commit with a fixed git argument vector resolved
 # through shutil.which, without a shell and without untrusted input
 "benchmarks/level0_physics.py" = ["S603"]

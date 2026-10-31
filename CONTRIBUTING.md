@@ -57,6 +57,17 @@ Run the full suite and `make preflight` before an explicitly requested push;
 Python/native parity checks in `VALIDATION.md`. Commits are atomic,
 descriptive, and staged by explicit pathspec. History is never rewritten.
 
+The `commit-msg` hook checks each new message for the `Seat:` trailer and
+the authorship line. To check commits that already exist, for example
+everything not yet pushed, run the same rules read-only over a range:
+
+```bash
+.venv/bin/python tools/check_commit_trailers.py --audit-range origin/main..main
+```
+
+It exits `0` when every commit passes, `1` with the violating commits
+listed, and `2` when the range cannot be read.
+
 ## Security-relevant changes
 
 Anything touching the threat model, the CONTROL adapter specification, or the

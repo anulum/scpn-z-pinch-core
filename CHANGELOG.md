@@ -19,6 +19,9 @@ SCPN Z-Pinch Core — CHANGELOG
 
 ### Added
 
+- `tools/check_commit_trailers.py --audit-range REV_RANGE` checks the
+  messages of existing commits read-only with the commit-msg rules; exit `2`
+  when the range cannot be read.
 - README badge block for the evidence this repository has earned: the CI,
   CodeQL, pre-commit, security-audit and docs workflows on `main`, the
   AGPL-3.0-or-later licence, the commercial licence route and GitHub

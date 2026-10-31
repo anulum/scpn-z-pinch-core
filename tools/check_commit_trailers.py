@@ -13,12 +13,20 @@ without exactly one required authorship line and exactly one vendor-neutral
 ``Seat:`` trailer immediately preceding it, messages carrying the superseded
 ``Co-Authored-By:`` trailer, and commit subjects containing outward-facing
 self-praise terms.
+
+``--audit-range REV_RANGE`` applies the same rules, read-only, to every
+commit of an existing git revision range (for example ``origin/main..main``)
+and reports each violating commit by its abbreviated hash and subject.
+History is never rewritten; commits older than the policy are reported as
+they are.
 """
 
 from __future__ import annotations
 
 import argparse
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Final
@@ -131,6 +139,105 @@ def message_violations(message: str) -> list[str]:
     return violations
 
 
+class RangeAuditError(RuntimeError):
+    """A revision range could not be read from git."""
+
+
+def _git(root: Path, *args: str) -> str:
+    """Run one read-only git command and return its standard output.
+
+    Parameters
+    ----------
+    root
+        Repository work tree the command runs in.
+    *args
+        Git arguments.
+
+    Returns
+    -------
+    str
+        Standard output decoded as UTF-8.
+
+    Raises
+    ------
+    RangeAuditError
+        If git is not installed or the command exits non-zero.
+    """
+    git = shutil.which("git")
+    if git is None:
+        raise RangeAuditError("git executable not found")
+    completed = subprocess.run([git, *args], cwd=root, capture_output=True, check=False)
+    if completed.returncode != 0:
+        detail = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise RangeAuditError(detail or f"git {args[0]} exited {completed.returncode}")
+    return completed.stdout.decode("utf-8")
+
+
+def audit_range(rev_range: str, root: Path) -> list[tuple[str, str, list[str]]]:
+    """Check every commit message of a revision range.
+
+    Parameters
+    ----------
+    rev_range
+        Any revision range ``git rev-list`` accepts, such as ``A..B``.
+    root
+        Repository work tree.
+
+    Returns
+    -------
+    list of (str, str, list[str])
+        Abbreviated hash, subject and violations of each violating commit,
+        oldest first; empty when every commit passes.
+
+    Raises
+    ------
+    RangeAuditError
+        If the range or any commit cannot be read.
+    """
+    if rev_range.startswith("-"):
+        raise RangeAuditError(f"revision range must not start with '-': {rev_range!r}")
+    commits = _git(root, "rev-list", "--reverse", rev_range, "--").split()
+    findings: list[tuple[str, str, list[str]]] = []
+    for commit in commits:
+        message = _git(root, "show", "-s", "--format=%B", commit)
+        violations = message_violations(message)
+        if violations:
+            findings.append((commit[:12], _subject_line(message), violations))
+    return findings
+
+
+def _report_range(rev_range: str, root: Path) -> int:
+    """Print a range audit and return its exit status.
+
+    Parameters
+    ----------
+    rev_range
+        Revision range to audit.
+    root
+        Repository work tree.
+
+    Returns
+    -------
+    int
+        ``0`` when every commit passes, ``1`` when any violates the policy,
+        ``2`` when the range cannot be read.
+    """
+    try:
+        findings = audit_range(rev_range, root)
+    except RangeAuditError as exc:
+        print(f"Range audit failed: {exc}", file=sys.stderr)
+        return 2
+    if not findings:
+        print(f"commit-trailers: PASS {rev_range}")
+        return 0
+    print(f"commit-trailers: FAIL {rev_range}", file=sys.stderr)
+    for commit, subject, violations in findings:
+        print(f"  {commit} {subject}", file=sys.stderr)
+        for violation in violations:
+            print(f"    - {violation}", file=sys.stderr)
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the commit-trailer hook.
 
@@ -142,11 +249,17 @@ def main(argv: list[str] | None = None) -> int:
     Returns
     -------
     int
-        ``0`` when validation passes, ``1`` for policy violations.
+        ``0`` when validation passes, ``1`` for policy violations, ``2``
+        when an audited range cannot be read.
     """
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("message_file", type=Path)
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument("message_file", type=Path, nargs="?")
+    target.add_argument("--audit-range", metavar="REV_RANGE")
+    parser.add_argument("--root", type=Path, default=Path())
     args = parser.parse_args(argv)
+    if args.audit_range is not None:
+        return _report_range(args.audit_range, args.root)
     violations = message_violations(args.message_file.read_text(encoding="utf-8"))
     if not violations:
         return 0
