@@ -20,4 +20,4 @@ reuse==6.2.0
 hypothesis==6.170.0
 PyYAML==6.0.3
 types-PyYAML==6.0.12.20260906
-maturin==1.15.0
+maturin==1.16.0
