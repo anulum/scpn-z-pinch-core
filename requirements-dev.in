@@ -19,5 +19,5 @@ coverage==7.17.0
 reuse==6.2.0
 hypothesis==6.170.0
 PyYAML==6.0.3
-types-PyYAML==6.0.12.20260906
+types-PyYAML==6.0.12.20261111
 maturin==1.15.0
